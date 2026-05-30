@@ -32,38 +32,44 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'web'])->group(function () {
     // Logout
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
-    
-    // Dashboard
+
+    // Password confirmation (sudo mode) — must be inside auth but NOT behind password.confirm itself
+    Route::get('/password/confirm', [WebAuthController::class, 'showConfirmPassword'])->name('password.confirm');
+    Route::post('/password/confirm', [WebAuthController::class, 'confirmPassword']);
+
+    // Dashboard — open, no password confirmation needed
+    // (employees use this to scan QR on the shared office computer)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::put('/profile/mfa', [ProfileController::class, 'updateMfa'])->name('profile.mfa');
-    
-    // Attendance API endpoints (session-based for web)
+
+    // QR Code generation — open to admin/management WITHOUT password confirmation
+    // (the whole point: employees can hand the computer to admin to generate QR)
+    Route::get('/qr/generate', [QrCodeController::class, 'generate'])
+        ->middleware('role:admin,management')
+        ->name('qr.generate');
+
+    // Profile — requires password confirmation (personal sensitive data)
+    Route::middleware('password.confirm')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::put('/profile/mfa', [ProfileController::class, 'updateMfa'])->name('profile.mfa');
+    });
+
+    // Attendance history — open (employees check their own records)
     Route::get('/attendance/today', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'today'])->name('attendance.today');
-    Route::get('/attendance/history', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'history'])->name('attendance.history');
-    
-    // Attendance
     Route::get('/attendance/history', [WebAttendanceController::class, 'history'])->name('attendance.history');
-    
-    // Admin routes (admin only)
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+
+    // ── Confidential routes — password confirmation required ──────
+    // Admin routes
+    Route::middleware(['role:admin', 'password.confirm'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
         Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
     });
-    
-    // QR Code generation (admin/management only)
-    Route::get('/qr/generate', [QrCodeController::class, 'generate'])
-        ->middleware('role:admin,management')
-        ->name('qr.generate');
 
-    // Reports & schedule (admin/management only)
-    Route::middleware('role:admin,management')->group(function () {
+    // Reports & schedule
+    Route::middleware(['role:admin,management', 'password.confirm'])->group(function () {
         Route::get('/reports/payroll', [ReportController::class, 'index'])->name('reports.payroll');
         Route::get('/reports/schedule', [ScheduleController::class, 'edit'])->name('reports.schedule');
         Route::put('/reports/schedule', [ScheduleController::class, 'update'])->name('reports.schedule.update');
@@ -71,8 +77,8 @@ Route::middleware(['auth', 'web'])->group(function () {
         Route::delete('/reports/schedule/special-days', [ScheduleController::class, 'removeSpecialDay'])->name('reports.schedule.special-days.remove');
     });
 
-    // Audit logs (admin)
-    Route::middleware('role:admin')->group(function () {
+    // Audit logs
+    Route::middleware(['role:admin', 'password.confirm'])->group(function () {
         Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('audit.logs');
     });
 });

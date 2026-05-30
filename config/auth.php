@@ -115,6 +115,9 @@ return [
     |
     */
 
-    'password_timeout' => 10800,
+    // 30 minutes — appropriate for a shared office computer.
+    // After this window expires the user must re-enter their password
+    // to access any confidential page again.
+    'password_timeout' => 1800,
 
 ];

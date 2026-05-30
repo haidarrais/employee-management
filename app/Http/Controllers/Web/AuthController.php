@@ -140,4 +140,39 @@ class AuthController extends Controller
         
         return redirect()->route('login');
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Password confirmation (sudo mode)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Show the password confirmation form.
+     * Laravel's RequirePassword middleware redirects here automatically.
+     */
+    public function showConfirmPassword()
+    {
+        return view('auth.confirm-password');
+    }
+
+    /**
+     * Verify the password and stamp the session so the middleware
+     * considers the user confirmed for the next 3 hours.
+     */
+    public function confirmPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->password, $request->user()->password_hash)) {
+            return back()->withErrors([
+                'password' => 'The password you entered is incorrect.',
+            ]);
+        }
+
+        // Stamp the session — Laravel's RequirePassword middleware reads this
+        $request->session()->put('auth.password_confirmed_at', time());
+
+        return redirect()->intended(route('dashboard'));
+    }
 }
