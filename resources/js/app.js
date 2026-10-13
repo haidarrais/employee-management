@@ -1,5 +1,6 @@
 import './bootstrap';
 import './components';
+import './scanner';
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {

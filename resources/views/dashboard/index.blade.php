@@ -195,34 +195,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e) { /* silent */ }
 });
 
+let qrWatcher = null;
+
 async function openQRScanner() {
   const modal  = document.getElementById('qr-modal');
   const video  = document.getElementById('qr-video');
   const status = document.getElementById('location-status');
+  const setStatus = (msg, color) => {
+      const span = document.createElement('span');
+      span.className = 't-caption' + (color ? '' : ' t-muted');
+      if (color) span.style.color = color;
+      span.textContent = msg;
+      status.replaceChildren(span);
+  };
   modal.classList.remove('hidden');
 
   try {
-    status.innerHTML = '<span class="t-caption t-muted">Getting location…</span>';
+    setStatus('Getting location…');
     const pos = await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
     );
-    status.innerHTML = `<span class="t-caption" style="color:#34c759;">Location acquired (±${Math.round(pos.coords.accuracy)}m)</span>`;
+    const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+    setStatus(`Location acquired (±${Math.round(pos.coords.accuracy)}m). Point the camera at the QR code.`, '#34c759');
 
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     video.srcObject = stream;
+    await video.play();
+
+    qrWatcher = window.AttendanceScanner.watchForQr(video);
+    const payload = await qrWatcher.promise;
+    qrWatcher = null;
+
+    setStatus('Recording attendance…');
+    const result = await window.AttendanceScanner.submitAttendance(payload, coords);
+    setStatus(result.message || 'Attendance recorded.', '#34c759');
+    setTimeout(() => window.location.reload(), 1500);
   } catch(e) {
-    status.innerHTML = `<span class="t-caption" style="color:#ff3b30;">${e.message}</span>`;
+    if (e.message !== 'cancelled') setStatus(e.message, '#ff3b30');
+  } finally {
+    stopCamera();
   }
 }
 
-function closeQRScanner() {
-  const modal = document.getElementById('qr-modal');
+function stopCamera() {
   const video = document.getElementById('qr-video');
-  modal.classList.add('hidden');
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(t => t.stop());
     video.srcObject = null;
   }
+}
+
+function closeQRScanner() {
+  document.getElementById('qr-modal').classList.add('hidden');
+  if (qrWatcher) { qrWatcher.cancel(); qrWatcher = null; }
+  stopCamera();
 }
 </script>
 @endpush

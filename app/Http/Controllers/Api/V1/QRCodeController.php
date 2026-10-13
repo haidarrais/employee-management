@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceRecord;
 use App\Models\QRCode;
-use App\Models\SystemConfig;
 use App\Services\AuditService;
+use App\Services\GeolocationService;
 use App\Services\QRCodeService;
+use App\Services\WorkingHoursService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,9 +22,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class QRCodeController extends Controller
 {
+    /** Maximum accepted difference between client and server clocks, in seconds. */
+    private const MAX_CLOCK_SKEW_SECONDS = 300;
+
     public function __construct(
-        private readonly QRCodeService $qrCodeService,
-        private readonly AuditService  $auditService,
+        private readonly QRCodeService       $qrCodeService,
+        private readonly AuditService        $auditService,
+        private readonly GeolocationService  $geolocation,
+        private readonly WorkingHoursService $workingHours,
     ) {}
 
     // -------------------------------------------------------------------------
@@ -88,23 +95,31 @@ class QRCodeController extends Controller
      * POST /api/v1/qr/validate
      * Authorization: Bearer {sanctum_token}
      * Body: { token, latitude, longitude, timestamp }
+     *
+     * `token` is the payload read from the QR image (the encrypted token).
      */
     public function verify(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'token'     => 'required|string',
+            'token'     => 'required|string|max:512',
             'latitude'  => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'timestamp' => 'required|integer',
         ]);
 
         $user      = $request->user();
-        $token     = $validated['token'];
         $latitude  = (float) $validated['latitude'];
         $longitude = (float) $validated['longitude'];
 
-        // Look up the QR record by token hash (never store raw tokens)
-        $qrCodeRecord = QRCode::where('token_hash', hash('sha256', $token))
+        // Reject requests whose client clock is far from ours (stale or replayed scans).
+        if (abs(now()->timestamp - (int) $validated['timestamp']) > self::MAX_CLOCK_SKEW_SECONDS) {
+            return $this->error('STALE_TIMESTAMP', 'Your device clock is out of sync. Please correct it and scan again.');
+        }
+
+        // The QR image carries the encrypted token; recover the raw one before hashing.
+        $token = $this->qrCodeService->resolveToken($validated['token']);
+
+        $qrCodeRecord = $token === null ? null : QRCode::where('token_hash', hash('sha256', $token))
             ->where('status', QRCode::STATUS_PENDING)
             ->first();
 
@@ -113,13 +128,10 @@ class QRCodeController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            return response()->json([
-                'valid' => false,
-                'error' => ['code' => 'INVALID_TOKEN', 'message' => 'Invalid or already used QR code.'],
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->error('INVALID_TOKEN', 'Invalid or already used QR code.');
         }
 
-        // Cryptographic validation + mark as used
+        // Cryptographic + expiry validation (does not consume the code yet).
         $result = $this->qrCodeService->validate($qrCodeRecord, $token);
 
         if (!$result['valid']) {
@@ -129,58 +141,78 @@ class QRCodeController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            return response()->json([
-                'valid' => false,
-                'error' => ['code' => 'VALIDATION_FAILED', 'message' => $result['message']],
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->error('VALIDATION_FAILED', $result['message']);
         }
 
-        // Geofence check (optional – skipped when workplace coords not configured)
-        $distanceMeters = null;
-        $geofenceRadius = QRCode::GEOFENCE_RADIUS_METERS;
+        // Geofence check. Fails closed: without a configured workplace we cannot verify presence.
+        $geofenceRadius  = QRCode::GEOFENCE_RADIUS_METERS;
+        $distanceMeters  = $this->geolocation->getDistanceToWorkplace($latitude, $longitude);
 
-        $workplaceCoords = $this->getWorkplaceCoordinates();
+        if ($distanceMeters === null) {
+            $this->auditService->log('qr_validate_geofence_unconfigured', $user->id, [
+                'qr_code_id' => $qrCodeRecord->id,
+                'ip_address' => $request->ip(),
+            ]);
 
-        if ($workplaceCoords !== null) {
-            $distanceMeters = $this->haversineDistance(
-                $latitude, $longitude,
-                $workplaceCoords['latitude'], $workplaceCoords['longitude']
+            return $this->error(
+                'GEOFENCE_NOT_CONFIGURED',
+                'Workplace location is not configured. Contact an administrator.',
+                Response::HTTP_SERVICE_UNAVAILABLE,
             );
-
-            if ($distanceMeters > $geofenceRadius) {
-                $this->auditService->log('qr_validate_geofence_failed', $user->id, [
-                    'qr_code_id'     => $qrCodeRecord->id,
-                    'distance'       => $distanceMeters,
-                    'allowed_radius' => $geofenceRadius,
-                    'ip_address'     => $request->ip(),
-                ]);
-
-                return response()->json([
-                    'valid' => false,
-                    'error' => [
-                        'code'    => 'GEOFENCE_VIOLATION',
-                        'message' => 'You are outside the allowed workplace area.',
-                        'details' => [
-                            'distance_meters' => round($distanceMeters, 2),
-                            'allowed_radius'  => $geofenceRadius,
-                        ],
-                    ],
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
         }
 
-        // Persist attendance record inside a transaction
-        $attendanceRecord = DB::transaction(
-            fn () => \App\Models\AttendanceRecord::create([
+        if ($distanceMeters > $geofenceRadius) {
+            $this->auditService->log('qr_validate_geofence_failed', $user->id, [
+                'qr_code_id'     => $qrCodeRecord->id,
+                'distance'       => $distanceMeters,
+                'allowed_radius' => $geofenceRadius,
+                'ip_address'     => $request->ip(),
+            ]);
+
+            return $this->error('GEOFENCE_VIOLATION', 'You are outside the allowed workplace area.', details: [
+                'distance_meters' => round($distanceMeters, 2),
+                'allowed_radius'  => $geofenceRadius,
+            ]);
+        }
+
+        // One check-in per user per day (checked before the code is consumed).
+        $alreadyCheckedIn = AttendanceRecord::where('user_id', $user->id)
+            ->where('status', AttendanceRecord::STATUS_CONFIRMED)
+            ->whereBetween('check_in_at', [now()->startOfDay(), now()->endOfDay()])
+            ->exists();
+
+        if ($alreadyCheckedIn) {
+            return $this->error('ALREADY_CHECKED_IN', 'You have already checked in today.', Response::HTTP_CONFLICT);
+        }
+
+        // Consume the code and write the record atomically.
+        $attendanceRecord = DB::transaction(function () use ($qrCodeRecord, $user, $latitude, $longitude, $distanceMeters) {
+            if (!$this->qrCodeService->claim($qrCodeRecord)) {
+                return null;
+            }
+
+            $checkInAt = now();
+
+            return AttendanceRecord::create([
                 'user_id'         => $user->id,
                 'qr_code_id'      => $qrCodeRecord->id,
                 'latitude'        => $latitude,
                 'longitude'       => $longitude,
                 'distance_meters' => $distanceMeters,
-                'status'          => 'confirmed',
-                'recorded_at'     => now(),
-            ])
-        );
+                'status'          => AttendanceRecord::STATUS_CONFIRMED,
+                'check_in_at'     => $checkInAt,
+                'late_minutes'    => $this->workingHours->lateMinutes($checkInAt),
+            ]);
+        });
+
+        if ($attendanceRecord === null) {
+            $this->auditService->log('qr_validate_lost_race', $user->id, [
+                'qr_code_id' => $qrCodeRecord->id,
+                'ip_address' => $request->ip(),
+            ]);
+
+            return $this->error('INVALID_TOKEN', 'Invalid or already used QR code.');
+        }
 
         $this->auditService->log('qr_validate_success', $user->id, [
             'qr_code_id'       => $qrCodeRecord->id,
@@ -194,11 +226,12 @@ class QRCodeController extends Controller
             'message' => 'Attendance recorded successfully.',
             'data'    => [
                 'attendance_id' => $attendanceRecord->id,
-                'recorded_at'   => $attendanceRecord->recorded_at?->toIso8601String() ?? now()->toIso8601String(),
+                'recorded_at'   => $attendanceRecord->check_in_at->toIso8601String(),
+                'late_minutes'  => $attendanceRecord->late_minutes,
                 'location'      => [
                     'latitude'        => $latitude,
                     'longitude'       => $longitude,
-                    'distance_meters' => $distanceMeters !== null ? round($distanceMeters, 2) : null,
+                    'distance_meters' => round($distanceMeters, 2),
                 ],
             ],
         ]);
@@ -208,45 +241,15 @@ class QRCodeController extends Controller
     // Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Retrieve workplace coordinates from system config.
-     *
-     * @return array{latitude: float, longitude: float}|null
-     */
-    private function getWorkplaceCoordinates(): ?array
+    private function error(string $code, string $message, int $status = Response::HTTP_UNPROCESSABLE_ENTITY, array $details = []): JsonResponse
     {
-        $config = SystemConfig::where('key', 'workplace_coordinates')->first();
+        $error = ['code' => $code, 'message' => $message];
 
-        if (!$config) {
-            return null;
+        if ($details !== []) {
+            $error['details'] = $details;
         }
 
-        $coords = json_decode($config->value, true);
-
-        if (!isset($coords['latitude'], $coords['longitude'])) {
-            return null;
-        }
-
-        return $coords;
-    }
-
-    /**
-     * Calculate the great-circle distance between two points (Haversine formula).
-     *
-     * @return float Distance in metres
-     */
-    private function haversineDistance(
-        float $lat1, float $lon1,
-        float $lat2, float $lon2,
-    ): float {
-        $R    = 6_371_000; // Earth radius in metres
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-
-        $a = sin($dLat / 2) ** 2
-            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
-
-        return $R * 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return response()->json(['valid' => false, 'error' => $error], $status);
     }
 
     private function serviceUnavailable(): JsonResponse

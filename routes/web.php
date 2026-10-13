@@ -22,10 +22,10 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [WebAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [WebAuthController::class, 'login'])->middleware('web');
+    Route::post('/login', [WebAuthController::class, 'login'])->middleware(['web', 'throttle:5,1']);
     
     Route::get('/mfa-verify', [WebAuthController::class, 'showMfaForm'])->name('mfa.verify.form');
-    Route::post('/mfa-verify', [WebAuthController::class, 'verifyMfa'])->name('mfa.verify')->middleware('web');
+    Route::post('/mfa-verify', [WebAuthController::class, 'verifyMfa'])->name('mfa.verify')->middleware(['web', 'throttle:5,1']);
 });
 
 // Authenticated routes - use web middleware for session support

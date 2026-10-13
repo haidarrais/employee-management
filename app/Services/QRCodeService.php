@@ -67,6 +67,7 @@ class QRCodeService
      * Validate a QR code token.
      * Checks if the provided token matches the stored hash,
      * verifies the QR code is not expired and still pending.
+     * Does NOT consume the code: call claim() once every other check passed.
      *
      * @param QRCode $qrCode The QR code record to validate against
      * @param string $providedToken The raw token provided by the scanner
@@ -102,14 +103,48 @@ class QRCodeService
             ];
         }
 
-        // Token is valid, mark QR code as used
-        $qrCode->markAsUsed();
-
         return [
             'valid' => true,
             'message' => 'QR code validated successfully',
             'qrCode' => $qrCode,
         ];
+    }
+
+    /**
+     * Turn the payload read from a scanned QR image back into the raw token.
+     *
+     * The image encodes the encrypted token, while only the hash of the raw
+     * token is stored. Returns null when the payload is not ours or was altered.
+     */
+    public function resolveToken(string $scannedPayload): ?string
+    {
+        return $this->encryptionService->decryptQRToken(trim($scannedPayload));
+    }
+
+    /**
+     * Atomically consume a pending, unexpired QR code.
+     *
+     * A single conditional UPDATE decides the winner, so two concurrent scans
+     * of the same code cannot both succeed.
+     *
+     * @return bool True when this call consumed the code
+     */
+    public function claim(QRCode $qrCode): bool
+    {
+        $claimed = QRCode::where('id', $qrCode->id)
+            ->where('status', QRCode::STATUS_PENDING)
+            ->where('expires_at', '>', now())
+            ->update([
+                'status'     => QRCode::STATUS_USED,
+                'used_at'    => now(),
+                'updated_at' => now(),
+            ]);
+
+        if ($claimed === 1) {
+            $qrCode->refresh();
+        }
+
+        return $claimed === 1;
     }
 
     /**
