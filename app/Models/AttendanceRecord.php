@@ -101,7 +101,8 @@ class AttendanceRecord extends Model
      */
     public function isWithinGeofence(): bool
     {
-        return $this->distance_meters <= self::GEOFENCE_RADIUS_METERS;
+        return $this->distance_meters !== null
+            && $this->distance_meters <= self::GEOFENCE_RADIUS_METERS;
     }
 
     /**

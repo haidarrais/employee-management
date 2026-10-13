@@ -156,27 +156,11 @@ class AuthController extends Controller
      */
     public function sessionExtend(Request $request): JsonResponse
     {
-        $session = $request->session();
-        $isMobile = $session->get('is_mobile', false);
-        
-        if ($isMobile) {
-            // Reset mobile session activity timestamp
-            $session->put('mobile_last_activity', now()->timestamp);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Mobile session extended',
-                'expires_in_minutes' => 15,
-            ]);
-        }
-
-        // Desktop session extension using standard Sanctum token expiration
+        // API tokens are stateless: extend the token's own expiry.
         $token = $request->user()->currentAccessToken();
-        
-        if ($token) {
-            // Extend expiration by 120 minutes (standard session) from now
-            $token->expires_at = now()->addMinutes(120);
-            $token->save();
+
+        if ($token && method_exists($token, 'forceFill')) {
+            $token->forceFill(['expires_at' => now()->addMinutes(120)])->save();
         }
 
         return response()->json([
@@ -259,11 +243,7 @@ class AuthController extends Controller
         );
 
         // Determine redirect based on role
-        $redirectUrl = match ($user->role) {
-            User::ROLE_ADMIN => '/admin/dashboard',
-            User::ROLE_MANAGEMENT => '/management/dashboard',
-            default => '/dashboard',
-        };
+        $redirectUrl = '/dashboard';
 
         return response()->json([
             'success' => true,

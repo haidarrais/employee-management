@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'ability:full_access'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -27,18 +27,21 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 */
 Route::prefix('v1/auth')->group(function () {
     // Public routes
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
-        Route::post('/session/extend', [AuthController::class, 'sessionExtend']);
-        
-        // MFA verification - requires mfa_pending token ability
+        // MFA verification - the only route a mfa_pending token may reach (besides logout)
         Route::post('/mfa/verify', [AuthController::class, 'verifyMfa'])
-            ->middleware('ability:mfa_pending')
+            ->middleware(['ability:mfa_pending', 'throttle:5,1'])
             ->name('auth.mfa.verify');
+        Route::post('/logout', [AuthController::class, 'logout']);
+
+        // Everything else requires a fully authenticated token (MFA completed)
+        Route::middleware('ability:full_access')->group(function () {
+            Route::get('/me', [AuthController::class, 'me']);
+            Route::post('/session/extend', [AuthController::class, 'sessionExtend']);
+        });
     });
 });
 
@@ -47,7 +50,7 @@ Route::prefix('v1/auth')->group(function () {
 | QR Code Routes (API v1)
 |--------------------------------------------------------------------------
 */
-Route::prefix('v1/qr')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/qr')->middleware(['auth:sanctum', 'ability:full_access'])->group(function () {
     // Generate QR code - admin/management only
     Route::post('/generate', [QRCodeController::class, 'generate'])
         ->middleware('role:admin,management')
@@ -63,7 +66,7 @@ Route::prefix('v1/qr')->middleware('auth:sanctum')->group(function () {
 | Attendance Routes (API v1)
 |--------------------------------------------------------------------------
 */
-Route::prefix('v1/attendance')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/attendance')->middleware(['auth:sanctum', 'ability:full_access'])->group(function () {
     // Submit attendance - handled by QRCodeController@verify
     // Get attendance history
     Route::get('/history', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'history'])
