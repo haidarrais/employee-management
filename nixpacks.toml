@@ -1,0 +1,83 @@
+# Nixpacks configuration for the Employee Attendance System.
+#
+# Why this file exists:
+# Nixpacks' PHP provider auto-detects Laravel (composer.json requires
+# laravel/framework) and emits its own nginx template that already contains a
+# `location /` block. Coolify additionally injects
+# NIXPACKS_PHP_FALLBACK_PATH=/index.php, which makes that same template emit a
+# second `location /` block. nginx refuses to start with
+#   nginx: [emerg] duplicate location "/" in /nginx.conf
+# so the container never becomes healthy and every deploy rolls back.
+#
+# Overriding the template here keeps a single `location /` (Laravel's
+# try_files rewrite) and drops the fallback-path conditional entirely.
+#
+# Template placeholders:
+#   ${PORT}, ${NIXPACKS_PHP_ROOT_DIR}  -> substituted from the container env
+#   $!{nginx}                          -> nix store path of the nginx binary
+# Backslashes are doubled because this is a TOML basic string.
+
+[staticAssets]
+
+"nginx.template.conf" = """
+worker_processes 5;
+daemon off;
+
+worker_rlimit_nofile 8192;
+
+events {
+  worker_connections  4096;
+}
+
+http {
+    include    $!{nginx}/conf/mime.types;
+    index      index.html index.htm index.php;
+
+    default_type application/octet-stream;
+
+    log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+        '"$request" $body_bytes_sent "$http_referer" '
+        '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log /dev/stdout;
+    error_log  /dev/stdout;
+
+    sendfile     on;
+    tcp_nopush   on;
+    server_names_hash_bucket_size 128;
+
+    server {
+        listen ${PORT};
+        listen [::]:${PORT};
+        server_name localhost;
+
+        root ${NIXPACKS_PHP_ROOT_DIR};
+
+        add_header X-Frame-Options "SAMEORIGIN";
+        add_header X-Content-Type-Options "nosniff";
+
+        index index.php;
+
+        charset utf-8;
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location = /favicon.ico { access_log off; log_not_found off; }
+        location = /robots.txt  { access_log off; log_not_found off; }
+
+        error_page 404 /index.php;
+
+        location ~ \\.php$ {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            include $!{nginx}/conf/fastcgi_params;
+            include $!{nginx}/conf/fastcgi.conf;
+        }
+
+        location ~ /\\.(?!well-known).* {
+            deny all;
+        }
+    }
+}
+"""
