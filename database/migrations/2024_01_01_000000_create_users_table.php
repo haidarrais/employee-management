@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password_hash');
             $table->string('name');
-            $table->enum('role', ['admin', 'management', 'qr_generator', 'employee']);
+            $table->enum('role', ['superadmin', 'admin', 'management', 'qr_generator', 'employee']);
             $table->string('mfa_secret')->nullable();
             $table->boolean('mfa_enabled')->default(false);
             $table->text('encryption_key')->nullable();
