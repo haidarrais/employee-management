@@ -7,18 +7,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * AttendanceRecord Model
- * 
- * Represents an employee's attendance submission with geolocation data.
- * Each record is linked to a user and a QR code used for submission.
- * 
+ *
+ * Represents one attendance work session with geolocation data.
+ * A user may have multiple confirmed sessions per day, e.g. morning work,
+ * lunch break, afternoon work.
+ *
  * @property int $id
  * @property int $user_id
  * @property int $qr_code_id
  * @property float $latitude
  * @property float $longitude
  * @property float $distance_meters
+ * @property float|null $check_out_latitude
+ * @property float|null $check_out_longitude
+ * @property float|null $check_out_distance_meters
  * @property string $status
  * @property string|null $rejection_reason
+ * @property \Carbon\Carbon|null $check_in_at
+ * @property \Carbon\Carbon|null $check_out_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read User $user
@@ -49,6 +55,9 @@ class AttendanceRecord extends Model
         'latitude',
         'longitude',
         'distance_meters',
+        'check_out_latitude',
+        'check_out_longitude',
+        'check_out_distance_meters',
         'status',
         'rejection_reason',
         'check_in_at',
@@ -64,16 +73,19 @@ class AttendanceRecord extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'user_id'          => 'integer',
-        'qr_code_id'       => 'integer',
-        'latitude'         => 'float',
-        'longitude'        => 'float',
-        'distance_meters'  => 'float',
-        'check_in_at'      => 'datetime',
-        'check_out_at'     => 'datetime',
-        'late_minutes'     => 'integer',
-        'overtime_minutes' => 'integer',
-        'daily_fee'        => 'float',
+        'user_id'                   => 'integer',
+        'qr_code_id'                => 'integer',
+        'latitude'                  => 'float',
+        'longitude'                 => 'float',
+        'distance_meters'           => 'float',
+        'check_out_latitude'        => 'float',
+        'check_out_longitude'       => 'float',
+        'check_out_distance_meters' => 'float',
+        'check_in_at'               => 'datetime',
+        'check_out_at'              => 'datetime',
+        'late_minutes'              => 'integer',
+        'overtime_minutes'          => 'integer',
+        'daily_fee'                 => 'float',
     ];
 
     /**
@@ -93,6 +105,28 @@ class AttendanceRecord extends Model
     }
 
     /**
+     * Check if this session is currently open.
+     */
+    public function isOpen(): bool
+    {
+        return $this->status === self::STATUS_CONFIRMED
+            && $this->check_in_at !== null
+            && $this->check_out_at === null;
+    }
+
+    /**
+     * Total worked minutes for this session.
+     */
+    public function workedMinutes(): int
+    {
+        if (!$this->check_in_at || !$this->check_out_at) {
+            return 0;
+        }
+
+        return (int) $this->check_in_at->diffInMinutes($this->check_out_at);
+    }
+
+    /**
      * Check if the attendance is within the geofence radius.
      *
      * Compares the recorded distance against the currently configured radius,
@@ -107,6 +141,18 @@ class AttendanceRecord extends Model
         }
 
         return $this->distance_meters <= app(\App\Services\GeolocationService::class)->getGeofenceRadius();
+    }
+
+    /**
+     * Check if the check-out location was within the geofence radius.
+     */
+    public function isCheckoutWithinGeofence(): bool
+    {
+        if ($this->check_out_distance_meters === null) {
+            return false;
+        }
+
+        return $this->check_out_distance_meters <= app(\App\Services\GeolocationService::class)->getGeofenceRadius();
     }
 
     /**
@@ -139,5 +185,13 @@ class AttendanceRecord extends Model
     public function scopeToday($query)
     {
         return $query->whereDate('created_at', now()->toDateString());
+    }
+
+    /**
+     * Scope to get currently open sessions.
+     */
+    public function scopeOpen($query)
+    {
+        return $query->confirmed()->whereNotNull('check_in_at')->whereNull('check_out_at');
     }
 }

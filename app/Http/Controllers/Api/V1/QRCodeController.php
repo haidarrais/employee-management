@@ -17,8 +17,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * QRCode API Controller (v1)
  *
- * POST /api/v1/qr/generate  – generate a new QR code (admin/management only)
- * POST /api/v1/qr/validate  – validate a scanned token and record attendance
+ * POST /api/v1/qr/generate  - generate a new QR code (admin/management only)
+ * POST /api/v1/qr/validate  - validate a scanned token and record attendance
  */
 class QRCodeController extends Controller
 {
@@ -96,7 +96,10 @@ class QRCodeController extends Controller
      * Authorization: Bearer {sanctum_token}
      * Body: { token, latitude, longitude, timestamp }
      *
-     * `token` is the payload read from the QR image (the encrypted token).
+     * If the user has no open session today, the scan creates a check-in.
+     * If the user already has an open session today, the scan closes it as a
+     * check-out. This supports lunch breaks naturally:
+     *   check in -> check out for lunch -> check in after lunch -> check out home.
      */
     public function verify(Request $request): JsonResponse
     {
@@ -145,8 +148,8 @@ class QRCodeController extends Controller
         }
 
         // Geofence check. Fails closed: without a configured workplace we cannot verify presence.
-        $geofenceRadius  = $this->geolocation->getGeofenceRadius();
-        $distanceMeters  = $this->geolocation->getDistanceToWorkplace($latitude, $longitude);
+        $geofenceRadius = $this->geolocation->getGeofenceRadius();
+        $distanceMeters = $this->geolocation->getDistanceToWorkplace($latitude, $longitude);
 
         if ($distanceMeters === null) {
             $this->auditService->log('qr_validate_geofence_unconfigured', $user->id, [
@@ -175,17 +178,29 @@ class QRCodeController extends Controller
             ]);
         }
 
-        // One check-in per user per day (checked before the code is consumed).
-        $alreadyCheckedIn = AttendanceRecord::where('user_id', $user->id)
+        $openSession = AttendanceRecord::where('user_id', $user->id)
             ->where('status', AttendanceRecord::STATUS_CONFIRMED)
-            ->whereBetween('check_in_at', [now()->startOfDay(), now()->endOfDay()])
-            ->exists();
+            ->whereDate('check_in_at', now()->toDateString())
+            ->whereNull('check_out_at')
+            ->latest('check_in_at')
+            ->first();
 
-        if ($alreadyCheckedIn) {
-            return $this->error('ALREADY_CHECKED_IN', 'You have already checked in today.', Response::HTTP_CONFLICT);
+        if ($openSession) {
+            return $this->recordCheckOut($request, $qrCodeRecord, $openSession, $latitude, $longitude, $distanceMeters);
         }
 
-        // Consume the code and write the record atomically.
+        return $this->recordCheckIn($request, $qrCodeRecord, $latitude, $longitude, $distanceMeters);
+    }
+
+    private function recordCheckIn(
+        Request $request,
+        QRCode $qrCodeRecord,
+        float $latitude,
+        float $longitude,
+        float $distanceMeters,
+    ): JsonResponse {
+        $user = $request->user();
+
         $attendanceRecord = DB::transaction(function () use ($qrCodeRecord, $user, $latitude, $longitude, $distanceMeters) {
             if (!$this->qrCodeService->claim($qrCodeRecord)) {
                 return null;
@@ -209,12 +224,13 @@ class QRCodeController extends Controller
             $this->auditService->log('qr_validate_lost_race', $user->id, [
                 'qr_code_id' => $qrCodeRecord->id,
                 'ip_address' => $request->ip(),
+                'action'     => 'check_in',
             ]);
 
             return $this->error('INVALID_TOKEN', 'Invalid or already used QR code.');
         }
 
-        $this->auditService->log('qr_validate_success', $user->id, [
+        $this->auditService->log('attendance_check_in_success', $user->id, [
             'qr_code_id'       => $qrCodeRecord->id,
             'attendance_id'    => $attendanceRecord->id,
             'distance_meters'  => $distanceMeters,
@@ -223,12 +239,91 @@ class QRCodeController extends Controller
 
         return response()->json([
             'valid'   => true,
-            'message' => 'Attendance recorded successfully.',
+            'action'  => 'check_in',
+            'message' => 'Checked in successfully.',
             'data'    => [
                 'attendance_id' => $attendanceRecord->id,
                 'recorded_at'   => $attendanceRecord->check_in_at->toIso8601String(),
+                'check_in_at'   => $attendanceRecord->check_in_at->toIso8601String(),
                 'late_minutes'  => $attendanceRecord->late_minutes,
                 'location'      => [
+                    'latitude'        => $latitude,
+                    'longitude'       => $longitude,
+                    'distance_meters' => round($distanceMeters, 2),
+                ],
+            ],
+        ]);
+    }
+
+    private function recordCheckOut(
+        Request $request,
+        QRCode $qrCodeRecord,
+        AttendanceRecord $openSession,
+        float $latitude,
+        float $longitude,
+        float $distanceMeters,
+    ): JsonResponse {
+        $user = $request->user();
+
+        $attendanceRecord = DB::transaction(function () use ($qrCodeRecord, $openSession, $latitude, $longitude, $distanceMeters, $user) {
+            if (!$this->qrCodeService->claim($qrCodeRecord)) {
+                return null;
+            }
+
+            $session = AttendanceRecord::whereKey($openSession->id)
+                ->whereNull('check_out_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$session) {
+                return null;
+            }
+
+            $checkOutAt = now();
+            $computed = $this->workingHours->compute($session->check_in_at, $checkOutAt, $user);
+
+            $session->update([
+                'check_out_at'              => $checkOutAt,
+                'check_out_latitude'        => $latitude,
+                'check_out_longitude'       => $longitude,
+                'check_out_distance_meters' => $distanceMeters,
+                'overtime_minutes'          => $computed['overtime_minutes'],
+                'daily_fee'                 => $computed['daily_fee'],
+            ]);
+
+            return $session->refresh();
+        });
+
+        if ($attendanceRecord === null) {
+            $this->auditService->log('qr_validate_lost_race', $user->id, [
+                'qr_code_id' => $qrCodeRecord->id,
+                'ip_address' => $request->ip(),
+                'action'     => 'check_out',
+            ]);
+
+            return $this->error('INVALID_TOKEN', 'Invalid or already used QR code.');
+        }
+
+        $this->auditService->log('attendance_check_out_success', $user->id, [
+            'qr_code_id'       => $qrCodeRecord->id,
+            'attendance_id'    => $attendanceRecord->id,
+            'distance_meters'  => $distanceMeters,
+            'worked_minutes'   => $attendanceRecord->workedMinutes(),
+            'ip_address'       => $request->ip(),
+        ]);
+
+        return response()->json([
+            'valid'   => true,
+            'action'  => 'check_out',
+            'message' => 'Checked out successfully.',
+            'data'    => [
+                'attendance_id'    => $attendanceRecord->id,
+                'recorded_at'      => $attendanceRecord->check_out_at->toIso8601String(),
+                'check_in_at'      => $attendanceRecord->check_in_at->toIso8601String(),
+                'check_out_at'     => $attendanceRecord->check_out_at->toIso8601String(),
+                'worked_minutes'   => $attendanceRecord->workedMinutes(),
+                'overtime_minutes' => $attendanceRecord->overtime_minutes,
+                'location'         => [
                     'latitude'        => $latitude,
                     'longitude'       => $longitude,
                     'distance_meters' => round($distanceMeters, 2),

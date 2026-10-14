@@ -30,12 +30,12 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
 
         <div class="card" style="text-align:center;padding:28px 24px;">
-          <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Present</p>
+          <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Confirmed Sessions</p>
           <p style="font-size:40px;font-weight:600;color:var(--ok);margin:0;line-height:1;">{{ $stats['present'] ?? 0 }}</p>
         </div>
 
         <div class="card" style="text-align:center;padding:28px 24px;">
-          <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Absent</p>
+          <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Rejected</p>
           <p style="font-size:40px;font-weight:600;color:var(--danger);margin:0;line-height:1;">{{ $stats['absent'] ?? 0 }}</p>
         </div>
 
@@ -52,7 +52,7 @@
   <section style="background:var(--parchment);padding:var(--space-section) 22px;">
     <div style="max-width:980px;margin:0 auto;">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;">
-        <h2 class="t-section t-ink" style="margin:0;">Records</h2>
+        <h2 class="t-section t-ink" style="margin:0;">Sessions</h2>
         <span class="t-caption t-muted">{{ $records->total() }} total</span>
       </div>
 
@@ -76,17 +76,23 @@
               @endif
             </div>
             <div>
-              <p class="t-body t-ink" style="margin:0;font-weight:600;">{{ $record->created_at->format('l, F j, Y') }}</p>
+              <p class="t-body t-ink" style="margin:0;font-weight:600;">{{ optional($record->check_in_at ?? $record->created_at)->format('l, F j, Y') }}</p>
               <p class="t-caption t-muted" style="margin:0;">
-                {{ $record->created_at->format('g:i A') }}
+                In {{ optional($record->check_in_at ?? $record->created_at)->format('g:i A') }}
+                @if($record->check_out_at)
+                · Out {{ $record->check_out_at->format('g:i A') }}
+                · {{ $record->workedMinutes() }} min
+                @else
+                · Open session
+                @endif
                 @if($record->distance_meters)
-                · {{ round($record->distance_meters) }}m
+                · {{ round($record->distance_meters) }}m from workplace
                 @endif
               </p>
             </div>
           </div>
           <span class="badge {{ $record->status === 'confirmed' ? 'badge-success' : ($record->status === 'rejected' ? 'badge-error' : 'badge-gray') }}">
-            {{ ucfirst($record->status) }}
+            {{ $record->isOpen() ? 'Checked in' : ucfirst($record->status) }}
           </span>
         </div>
         @empty
