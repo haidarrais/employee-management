@@ -1,0 +1,30 @@
+.ux-page {
+    min-height: 100vh;
+    background: var(--canvas-soft);
+}
+
+.ux-hero {
+    padding: var(--space-section) var(--space-gutter);
+    background: var(--canvas);
+}
+
+.ux-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.ux-grid-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.ux-action-primary {
+    min-height: 52px;
+    padding: 14px 28px;
+}
+
+@media (max-width: 640px) {
+    .ux-hero {
+        padding-top: 48px;
+        padding-bottom: 48px;
+    }
+}
