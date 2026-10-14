@@ -44,9 +44,12 @@ Route::middleware(['auth', 'web'])->group(function () {
 
     // QR Code generation — open to admin/management/QR-generator WITHOUT password confirmation
     // QR-generator users may only generate QR codes and do not get payroll/report access.
-    Route::get('/qr/generate', [QrCodeController::class, 'generate'])
-        ->middleware('role:admin,management,qr_generator')
-        ->name('qr.generate');
+    Route::middleware('role:admin,management,qr_generator')->group(function () {
+        Route::get('/qr/generate', [QrCodeController::class, 'generate'])
+            ->name('qr.generate');
+        Route::get('/qr/{qrCode}/status', [QrCodeController::class, 'status'])
+            ->name('qr.status');
+    });
 
     // Profile — requires password confirmation (personal sensitive data)
     Route::middleware('password.confirm')->group(function () {
