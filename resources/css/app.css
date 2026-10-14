@@ -1,160 +1,191 @@
 @import "tailwindcss";
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    TAILWIND v4 THEME
-   In v4 the JS config is not loaded unless `@config` names it, so
-   the palette is declared here instead. This is what makes
-   `bg-surface`, `text-ink`, `font-display` etc. real utilities.
-   ───────────────────────────────────────────────────────────── */
+   Notion-inspired tokens: warm paper canvas, near-black Inter type,
+   one structural blue accent, quiet hairlines, and playful sticker
+   accents reserved for decorative/status use.
+   ------------------------------------------------------------------ */
 @theme {
   /* Palette */
-  --color-charcoal:      #0b0b0c;
-  --color-warm-white:    #f7f6f2;
-  --color-graphite:      #2e2e2e;
-  --color-slate-gray:    #6b6b6b;
-  --color-burnt-orange:  #ff6a00;
-  --color-olive:         #4a5a46;
-  --color-sky:           #6b9bd4;
+  --color-primary:       #0075de;
+  --color-primary-active:#005bab;
+  --color-secondary:     #213183;
+  --color-canvas:        #ffffff;
+  --color-canvas-soft:   #f6f5f4;
+  --color-surface:       #ffffff;
+  --color-ink:           #000000;
+  --color-ink-secondary: #31302e;
+  --color-ink-muted:     #615d59;
+  --color-ink-faint:     #a39e98;
+  --color-hairline:      #e6e6e6;
+  --color-accent-sky:    #62aef0;
+  --color-accent-purple: #d6b6f6;
+  --color-accent-pink:   #ff64c8;
+  --color-accent-orange: #dd5b00;
+  --color-accent-teal:   #2a9d99;
+  --color-accent-green:  #1aae39;
+  --color-accent-brown:  #523410;
 
   /* Semantic */
-  --color-surface:        #0b0b0c;
-  --color-surface-raised: #161617;
-  --color-ink:            #f7f6f2;
-  --color-ink-muted:      #9c9b96;
-  --color-ink-inverse:    #0b0b0c;
-  --color-hairline:       #2e2e2e;
-  --color-border-strong:  #6b6b6b;
-  --color-accent:         #ff6a00;
-  --color-on-accent:      #0b0b0c;
+  --color-surface-raised: #ffffff;
+  --color-ink-inverse:    #ffffff;
+  --color-border-strong:  #a39e98;
+  --color-accent:         #0075de;
+  --color-on-accent:      #ffffff;
 
-  /* Status */
-  --color-ok:     #7fae7a;
-  --color-warn:   #ff6a00;
-  --color-danger: #ff6b5e;
+  /* Status: Notion has no separate semantic ramp in the chrome, so
+     these are mapped from the decorative sticker palette. */
+  --color-ok:     #1aae39;
+  --color-warn:   #dd5b00;
+  --color-danger: #ff64c8;
 
   /* Type */
-  --font-display: "Space Grotesk Variable", "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --font-text:    Inter, "Helvetica Neue", Arial, sans-serif;
-  --font-sans:    Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-text:    Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-sans:    Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   ABDILLAH WORKS DESIGN TOKENS
-   Mirrors abdillah.group (src/data/tokens.json). Kept as literal
-   values, not imports: the two apps build separately, so a shared
-   runtime import is not possible. When abdillah.group tokens
-   change, change them here too.
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   NOTION DESIGN TOKENS
+   ------------------------------------------------------------------ */
 :root {
-  /* ── Palette ── */
-  --charcoal-black:      #0b0b0c;
-  --warm-white:          #f7f6f2;
-  --graphite:            #2e2e2e;
-  --slate-gray:          #6b6b6b;
-  /* Accessible contextual alias for Slate Gray used as SMALL TEXT.
-     The brand value #6b6b6b is 3.69:1 on the Charcoal ground, which
-     clears WCAG AA for large text (>=3:1) but not for body copy
-     (<4.5:1). Rather than change the brand token, body-sized text
-     uses this lightened sibling: same neutral hue, 5.19:1 on
-     --surface and 4.77:1 on --surface-raised. Large text and
-     decorative rules keep the exact brand value. */
-  --slate-gray-text:     #838383;
-  --burnt-orange:        #ff6a00;
-  --olive-green:         #4a5a46;
-  --sky-blue:            #6b9bd4;
-  --burnt-orange-light:  #d95a00;
+  /* Palette */
+  --primary:             #0075de;
+  --primary-active:      #005bab;
+  --secondary:           #213183;
+  --on-primary:          #ffffff;
+  --canvas:              #ffffff;
+  --canvas-soft:         #f6f5f4;
+  --surface:             #ffffff;
+  --surface-raised:      #ffffff;
+  --surface-inverse:     #000000;
+  --ink:                 #000000;
+  --ink-secondary:       #31302e;
+  --ink-muted:           #615d59;
+  --ink-faint:           #a39e98;
+  --ink-inverse:         #ffffff;
+  --hairline:            #e6e6e6;
+  --border-strong:       #a39e98;
+  --focus:               var(--primary);
+  --accent:              var(--primary);
+  --on-accent:           var(--on-primary);
 
-  /* ── Semantic (dark ground, the app's default) ── */
-  --surface:             #0b0b0c;
-  --surface-raised:      #161617;
-  --surface-inverse:     #f7f6f2;
-  --ink:                 #f7f6f2;
-  --ink-muted:           #9c9b96;
-  --ink-inverse:         #0b0b0c;
-  --hairline:            #2e2e2e;
-  --border-strong:       #6b6b6b;
-  --accent:              #ff6a00;
-  --on-accent:           #0b0b0c;
-  --focus:               #ff6a00;
+  /* Decorative sticker palette. Use for badges, small status cues,
+     icons, illustrations, and category dots; not for primary actions. */
+  --accent-sky:          #62aef0;
+  --accent-purple:       #d6b6f6;
+  --accent-purple-deep:  #391c57;
+  --accent-pink:         #ff64c8;
+  --accent-orange:       #dd5b00;
+  --accent-orange-deep:  #793400;
+  --accent-teal:         #2a9d99;
+  --accent-green:        #1aae39;
+  --accent-brown:        #523410;
 
-  /* ── Typography ── */
-  --font-display: "Space Grotesk Variable", "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --font-text:    Inter, "Helvetica Neue", Arial, sans-serif;
+  /* Legacy aliases used by Blade views. */
+  --charcoal-black:      var(--ink);
+  --warm-white:          var(--canvas-soft);
+  --graphite:            var(--ink-secondary);
+  --slate-gray:          var(--ink-muted);
+  --slate-gray-text:     var(--ink-muted);
+  --burnt-orange:        var(--accent-orange);
+  --olive-green:         var(--accent-green);
+  --sky-blue:            var(--accent-sky);
+  --burnt-orange-light:  var(--accent-orange);
+  --parchment:           var(--canvas-soft);
+  --pearl:               var(--surface);
+  --void:                var(--ink);
+  --tile-1:              var(--surface);
+  --tile-2:              var(--surface);
+  --tile-3:              var(--surface);
+  --muted:               var(--ink-muted);
+  --ink-80:              var(--ink-secondary);
+  --ink-48:              var(--ink-muted);
+  --faint:               var(--ink-faint);
+  --on-dark:             var(--on-primary);
+  --on-dark-2:           rgba(255,255,255,.76);
+  --line:                var(--hairline);
+  --soft:                var(--canvas-soft);
+  --blue:                var(--primary);
+  --blue-focus:          var(--primary);
+  --blue-dark:           var(--primary-active);
 
-  /* ── Type scale ── */
-  --type-hero:      clamp(56px, 8vw, 152px);
-  --type-title:     clamp(72px, 9vw, 152px);
-  --type-band:      clamp(40px, 4vw, 76px);
-  --type-cta:       clamp(36px, 3.6vw, 64px);
-  --type-section:   clamp(34px, 3.2vw, 56px);
-  --type-loop:      clamp(40px, 4vw, 68px);
-  --type-drop:      clamp(28px, 2.6vw, 44px);
-  --type-card:      clamp(22px, 1.7vw, 28px);
-  --type-row:       clamp(32px, 3.4vw, 56px);
-  --type-statement: clamp(26px, 2.4vw, 40px);
-  --type-quote:     clamp(28px, 2.8vw, 44px);
-  --type-numeral:   clamp(64px, 7vw, 112px);
+  /* Typography */
+  --font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-text:    Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
-  /* ── Space / layout ── */
-  --space-section-y:       96px;
-  --space-section-y-tight: 64px;
+  /* Type scale: Notion display roles and app-compatible aliases. */
+  --type-display-1: 64px;
+  --type-display-2: 54px;
+  --type-heading-1: 40px;
+  --type-heading-2: 26px;
+  --type-heading-3: 22px;
+  --type-title:     20px;
+  --type-body-md:   16px;
+  --type-body-sm:   15px;
+  --type-caption:   14px;
+  --type-eyebrow:   12px;
+
+  --type-hero:      clamp(42px, 6vw, 64px);
+  --type-title-app: clamp(34px, 5vw, 54px);
+  --type-band:      clamp(32px, 4vw, 54px);
+  --type-cta:       clamp(28px, 3vw, 40px);
+  --type-section:   clamp(28px, 3.2vw, 40px);
+  --type-loop:      clamp(28px, 3vw, 40px);
+  --type-drop:      clamp(22px, 2.2vw, 32px);
+  --type-card:      22px;
+  --type-row:       clamp(26px, 3vw, 40px);
+  --type-statement: clamp(22px, 2.4vw, 32px);
+  --type-quote:     clamp(24px, 2.8vw, 40px);
+  --type-numeral:   clamp(46px, 6vw, 64px);
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --radius: var(--radius-lg);
+
+  /* Space / layout */
+  --space-xxs: 4px;
+  --space-xs:  8px;
+  --space-sm:  12px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  28px;
+  --space-xxl: 32px;
+  --space-section-y:       88px;
+  --space-section-y-tight: 56px;
   --space-gutter:          32px;
+  --space-section:         var(--space-section-y);
+  --space-tile:            var(--space-section-y-tight);
   --wrap:   1280px;
   --wide:   1760px;
-  --header: 75px;
+  --header: 72px;
+  --touch:  44px;
 
-  /* ── Motion ── */
+  /* Motion and elevation */
   --ease-out:   cubic-bezier(.16,1,.3,1);
   --ease-inout: cubic-bezier(.65,0,.35,1);
+  --shadow-soft: 0 .175px 1.041px rgba(0,0,0,.01), 0 .8px 2.925px rgba(0,0,0,.02), 0 2.025px 7.847px rgba(0,0,0,.027), 0 4px 18px rgba(0,0,0,.04);
+  --shadow-elevated: 0 2px 6px rgba(0,0,0,.03), 0 8px 18px rgba(0,0,0,.04), 0 23px 52px rgba(0,0,0,.05);
+  --shadow-product: var(--shadow-elevated);
 
-  /* ── App-local semantics (mapped onto the tokens above) ── */
-  --touch: 44px;
-  --radius: 0;          /* AW is square-cornered; pills are the only exception */
-  --shadow-product: 0 24px 60px rgba(0,0,0,.45);
-
-  /* Legacy aliases — the Blade views reference these names directly.
-     Each maps to an AW token so no view needs editing. */
-  --canvas:      var(--surface);
-  --parchment:   var(--surface);
-  --pearl:       var(--surface-raised);
-  --void:        var(--charcoal-black);
-  --tile-1:      var(--surface-raised);
-  --tile-2:      var(--surface-raised);
-  --tile-3:      var(--surface-raised);
-  --muted:       var(--ink-muted);
-  --ink-80:      var(--ink);
-  --ink-48:      var(--ink-muted);
-  --faint:       var(--slate-gray-text);
-  --on-dark:     var(--warm-white);
-  --on-dark-2:   var(--ink-muted);
-  --line:        var(--hairline);
-  --soft:        var(--surface-raised);
-  --blue:        var(--accent);
-  --blue-focus:  var(--accent);
-  --blue-dark:   var(--accent);
-  --space-section: var(--space-section-y);
-  --space-tile:    var(--space-section-y-tight);
-
-  /* Status — AW carries no semantic red/green, so these are derived
-     from the palette and tuned for contrast on the dark ground. */
-  --ok:      #7fae7a;
-  --warn:    var(--burnt-orange);
-  --danger:  #ff6b5e;
-  --ok-bg:      rgba(74,90,70,.28);
-  --warn-bg:    rgba(255,106,0,.14);
-  --danger-bg:  rgba(255,107,94,.14);
+  /* Status */
+  --ok:      var(--accent-green);
+  --warn:    var(--accent-orange);
+  --danger:  var(--accent-pink);
+  --ok-bg:      rgba(26,174,57,.10);
+  --warn-bg:    rgba(221,91,0,.10);
+  --danger-bg:  rgba(255,100,200,.12);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   FONTS  (self-hosted — same files abdillah.group serves)
-   ───────────────────────────────────────────────────────────── */
-@font-face {
-  font-family: "Space Grotesk Variable";
-  font-style: normal;
-  font-weight: 300 700;
-  font-display: swap;
-  src: url("/fonts/space-grotesk-latin.woff2") format("woff2");
-}
+/* ------------------------------------------------------------------
+   FONTS
+   ------------------------------------------------------------------ */
 @font-face {
   font-family: Inter;
   font-style: normal;
@@ -170,39 +201,39 @@
   src: url("/fonts/inter-latin-500.woff2") format("woff2");
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    BASE
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   font-family: var(--font-text);
   font-size: 16px;
-  line-height: 26px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--ink);
-  background: var(--surface);
+  background: var(--canvas-soft);
 }
 
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--canvas-soft);
   color: var(--ink);
 }
 
-/* AW links inherit and carry a thin orange rule on hover rather than
-   switching colour, which keeps long prose readable. */
-a { color: inherit; text-decoration: none; }
-a:hover { color: var(--accent); }
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-active); }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   margin: 0;
+  color: var(--ink);
 }
 
-/* Focus is always visible and always orange — never removed. */
+p { color: var(--ink-secondary); }
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -213,23 +244,22 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
-::selection { background: var(--accent); color: var(--on-accent); }
+::selection { background: var(--primary); color: var(--on-primary); }
 
-/* Scrollbar, tuned to the dark ground */
-* { scrollbar-color: var(--graphite) var(--surface); scrollbar-width: thin; }
+* { scrollbar-color: var(--ink-faint) var(--canvas-soft); scrollbar-width: thin; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: var(--surface); }
-*::-webkit-scrollbar-thumb { background: var(--graphite); }
+*::-webkit-scrollbar-track { background: var(--canvas-soft); }
+*::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: var(--radius-full); }
 
-/* ─────────────────────────────────────────────────────────────
-   GLOBAL NAV  — AW header grammar: square, uppercase display type
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   GLOBAL NAV
+   ------------------------------------------------------------------ */
 .global-nav {
   position: sticky;
   top: 0;
   z-index: 100;
   min-height: var(--header);
-  background: rgba(11,11,12,.92);
+  background: rgba(255,255,255,.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--hairline);
@@ -248,21 +278,18 @@ textarea:focus-visible,
   gap: 16px;
 }
 
-/* The wordmark sits in the display face, tracked out and uppercase,
-   matching .nv / .eb in aw.css. */
 .global-nav__brand {
   font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: var(--warm-white);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--ink);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 12px;
 }
-.global-nav__brand:hover { color: var(--warm-white); }
+.global-nav__brand:hover { color: var(--ink); }
 .global-nav__brand img { display: block; width: 104px; height: auto; }
 
 .global-nav__actions {
@@ -271,15 +298,15 @@ textarea:focus-visible,
   gap: 10px;
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    SUB-NAV
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .sub-nav {
   position: sticky;
   top: var(--header);
   z-index: 90;
-  min-height: 60px;
-  background: rgba(11,11,12,.92);
+  min-height: 56px;
+  background: rgba(255,255,255,.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--hairline);
@@ -300,11 +327,10 @@ textarea:focus-visible,
 
 .sub-nav__title {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--type-body-sm);
   font-weight: 600;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--warm-white);
+  letter-spacing: -.01em;
+  color: var(--ink);
 }
 
 .sub-nav__links {
@@ -313,14 +339,11 @@ textarea:focus-visible,
   gap: 28px;
 }
 
-/* Underline grows from the left on hover, the .lk behaviour. */
 .sub-nav__link {
   position: relative;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  font-family: var(--font-text);
+  font-size: var(--type-body-sm);
+  font-weight: 400;
   color: var(--ink-muted);
   text-decoration: none;
   padding-bottom: 4px;
@@ -330,19 +353,21 @@ textarea:focus-visible,
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 1px;
-  background: var(--accent);
+  height: 2px;
+  background: var(--primary);
+  border-radius: var(--radius-full);
   transform: scaleX(0);
   transform-origin: right;
-  transition: transform .35s var(--ease-inout);
+  transition: transform .25s var(--ease-inout);
 }
-.sub-nav__link:hover { color: var(--warm-white); }
+.sub-nav__link:hover { color: var(--ink); }
 .sub-nav__link:hover::after { transform: scaleX(1); transform-origin: left; }
-.sub-nav__link.is-active { color: var(--accent); }
+.sub-nav__link.is-active { color: var(--primary); font-weight: 500; }
+.sub-nav__link.is-active::after { transform: scaleX(1); }
 
-/* ─────────────────────────────────────────────────────────────
-   BUTTONS  — square, uppercase, tracked; hover wipes orange up
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   BUTTONS
+   ------------------------------------------------------------------ */
 .btn-primary,
 .btn-ghost-pill,
 .btn-dark,
@@ -355,96 +380,79 @@ textarea:focus-visible,
   justify-content: center;
   gap: 8px;
   min-height: var(--touch);
-  padding: 14px 30px;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  border-radius: 0;
+  padding: 10px 22px;
+  font-family: var(--font-text);
+  font-size: var(--type-body-md);
+  font-weight: 500;
+  line-height: 1.5;
+  border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
-  transition: color .35s var(--ease-inout), border-color .35s var(--ease-inout);
+  transition: transform .16s var(--ease-out), background-color .2s var(--ease-out), border-color .2s var(--ease-out), color .2s var(--ease-out), box-shadow .2s var(--ease-out);
 }
 
-/* The wipe: a filled layer that rises from below on hover. */
 .btn-primary::before,
 .btn-ghost-pill::before,
 .btn-dark::before,
-.btn-danger::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateY(101%);
-  transition: transform .4s var(--ease-inout);
-  z-index: -1;
-}
-.btn-primary:hover::before,
-.btn-ghost-pill:hover::before,
-.btn-dark:hover::before,
-.btn-danger:hover::before { transform: translateY(0); }
+.btn-danger::before { content: none; }
 
 .btn-primary:active,
 .btn-ghost-pill:active,
 .btn-dark:active,
-.btn-danger:active { transform: translateY(1px); }
+.btn-danger:active { transform: scale(.98); }
 
-/* Primary — outlined orange that fills orange */
 .btn-primary {
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--on-primary);
   text-decoration: none;
+  box-shadow: var(--shadow-soft);
 }
-.btn-primary::before { background: var(--accent); }
-.btn-primary:hover { color: var(--on-accent); text-decoration: none; }
+.btn-primary:hover { background: var(--primary-active); border-color: var(--primary-active); color: var(--on-primary); text-decoration: none; }
 
-/* Ghost — outlined hairline that fills orange */
 .btn-ghost-pill {
-  background: transparent;
-  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
   color: var(--ink);
   text-decoration: none;
+  box-shadow: var(--shadow-soft);
 }
-.btn-ghost-pill::before { background: var(--accent); }
-.btn-ghost-pill:hover { color: var(--on-accent); border-color: var(--accent); text-decoration: none; }
+.btn-ghost-pill:hover { color: var(--ink); border-color: var(--ink-faint); text-decoration: none; }
 
-/* Dark — solid warm-white that fills orange (nav utilities) */
 .btn-dark {
-  background: var(--warm-white);
-  border: 1px solid var(--warm-white);
-  color: var(--ink-inverse);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  color: var(--on-primary);
   text-decoration: none;
+  box-shadow: var(--shadow-soft);
 }
-.btn-dark::before { background: var(--accent); }
-.btn-dark:hover { color: var(--ink-inverse); border-color: var(--accent); text-decoration: none; }
+.btn-dark:hover { background: var(--ink-secondary); border-color: var(--ink-secondary); color: var(--on-primary); text-decoration: none; }
 
-/* Danger — outlined red that fills red */
 .btn-danger {
-  background: transparent;
+  background: var(--surface);
   border: 1px solid var(--danger);
   color: var(--danger);
   text-decoration: none;
 }
-.btn-danger::before { background: var(--danger); }
-.btn-danger:hover { color: var(--ink-inverse); text-decoration: none; }
+.btn-danger:hover { background: var(--danger-bg); color: var(--danger); text-decoration: none; }
 
 .btn-sm {
   min-height: 38px;
-  padding: 10px 18px;
-  font-size: 11px;
+  padding: 7px 16px;
+  font-size: 14px;
 }
 
 .btn-block { width: 100%; }
 
-/* ─────────────────────────────────────────────────────────────
-   CARDS  — square, hairline border, raised surface
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   CARDS
+   ------------------------------------------------------------------ */
 .card {
-  background: var(--surface-raised);
+  background: var(--surface);
   border: 1px solid var(--hairline);
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-soft);
 }
 
 .card-header {
@@ -460,7 +468,7 @@ textarea:focus-visible,
 
 .card-footer {
   padding: 16px 24px;
-  background: var(--surface);
+  background: var(--canvas-soft);
   border-top: 1px solid var(--hairline);
   display: flex;
   align-items: center;
@@ -468,68 +476,66 @@ textarea:focus-visible,
   gap: 12px;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   FORMS  — AW's .in: transparent, underlined, orange on focus
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   FORMS
+   ------------------------------------------------------------------ */
 .form-label {
   display: block;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  font-family: var(--font-text);
+  font-size: var(--type-eyebrow);
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: .125px;
   color: var(--ink-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .form-input {
   width: 100%;
   min-height: var(--touch);
-  padding: 12px 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--border-strong);
-  border-radius: 0;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-xs);
   font-family: var(--font-text);
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--warm-white);
-  transition: border-color .25s var(--ease-out);
+  font-size: var(--type-body-sm);
+  line-height: 1.33;
+  color: var(--ink);
+  transition: border-color .2s var(--ease-out), box-shadow .2s var(--ease-out);
   appearance: none;
 }
 
-.form-input::placeholder { color: var(--slate-gray); }
-.form-input:hover { border-bottom-color: var(--ink-muted); }
+.form-input::placeholder { color: var(--ink-faint); }
+.form-input:hover { border-color: var(--ink-faint); }
 .form-input:focus {
   outline: none;
-  border-bottom-color: var(--accent);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-soft);
 }
 .form-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .form-input:disabled,
 .form-input[readonly] {
   color: var(--ink-muted);
-  border-bottom-style: dashed;
+  background: var(--canvas-soft);
   cursor: not-allowed;
 }
 
-/* Native select needs the arrow drawn explicitly. */
 select.form-input {
   padding-right: 28px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239c9b96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23615d59' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 6px center;
+  background-position: right 10px center;
   cursor: pointer;
 }
 select.form-input option {
-  background: var(--surface-raised);
+  background: var(--surface);
   color: var(--ink);
 }
 
-/* textarea shares the underline grammar */
 textarea.form-input { min-height: 140px; resize: vertical; }
 
 .form-error {
@@ -550,57 +556,59 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   width: 18px;
   height: 18px;
   border: 1px solid var(--border-strong);
-  border-radius: 0;
-  background: transparent;
-  accent-color: var(--accent);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  accent-color: var(--primary);
   cursor: pointer;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   BADGES  — square, tracked uppercase, like AW's .tg
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   BADGES
+   ------------------------------------------------------------------ */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--hairline);
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: .16em;
-  text-transform: uppercase;
+  font-family: var(--font-text);
+  font-size: var(--type-eyebrow);
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: .125px;
   white-space: nowrap;
+  background: var(--surface);
 }
 
-.badge-success { background: var(--ok-bg);     border-color: var(--ok);     color: var(--ok); }
-.badge-error   { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-.badge-warning { background: var(--warn-bg);   border-color: var(--warn);   color: var(--warn); }
-.badge-gray    { background: transparent;      border-color: var(--hairline); color: var(--ink-muted); }
-.badge-blue    { background: rgba(107,155,212,.14); border-color: var(--sky-blue); color: var(--sky-blue); }
+.badge-success { background: var(--ok-bg);     border-color: rgba(26,174,57,.28);  color: var(--ok); }
+.badge-error   { background: var(--danger-bg); border-color: rgba(255,100,200,.28); color: var(--danger); }
+.badge-warning { background: var(--warn-bg);   border-color: rgba(221,91,0,.28);    color: var(--warn); }
+.badge-gray    { background: var(--surface);   border-color: var(--hairline);       color: var(--ink-muted); }
+.badge-blue    { background: rgba(0,117,222,.08); border-color: rgba(0,117,222,.22); color: var(--primary); }
 
-/* ─────────────────────────────────────────────────────────────
-   ALERTS  — square, orange left rule for the accent cases
-   ───────────────────────────────────────────────────────────── */
+/* ------------------------------------------------------------------
+   ALERTS
+   ------------------------------------------------------------------ */
 .alert {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 16px 18px;
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--hairline);
-  background: var(--surface-raised);
+  background: var(--surface);
   font-size: 14px;
   line-height: 22px;
+  box-shadow: var(--shadow-soft);
 }
-.alert-error   { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-.alert-success { background: var(--ok-bg);     border-color: var(--ok);     color: var(--ok); }
-.alert-warning { background: var(--warn-bg);   border-color: var(--warn);   color: var(--warn); }
+.alert-error   { background: var(--danger-bg); border-color: rgba(255,100,200,.28); color: var(--danger); }
+.alert-success { background: var(--ok-bg);     border-color: rgba(26,174,57,.28);   color: var(--ok); }
+.alert-warning { background: var(--warn-bg);   border-color: rgba(221,91,0,.28);    color: var(--warn); }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    STATUS DOT
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .dot {
   display: inline-block;
   width: 8px;
@@ -611,20 +619,20 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 .dot-green  { background: var(--ok); animation: pulseDot 2s ease-in-out infinite; }
 .dot-red    { background: var(--danger); }
 .dot-yellow { background: var(--warn); }
-.dot-gray   { background: var(--slate-gray); }
+.dot-gray   { background: var(--ink-faint); }
 
 @keyframes pulseDot {
   0%,100% { opacity: 1; }
   50%     { opacity: .4; }
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    MODAL
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11,11,12,.8);
+  background: rgba(0,0,0,.28);
   backdrop-filter: blur(2px);
   z-index: 200;
 }
@@ -639,10 +647,11 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--surface-raised);
+  background: var(--surface);
   border: 1px solid var(--hairline);
-  border-radius: 0;
+  border-radius: var(--radius-xl);
   animation: slideUp .25s var(--ease-out);
+  box-shadow: var(--shadow-elevated);
 }
 
 @keyframes slideUp {
@@ -650,9 +659,9 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    DROPDOWN
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .dropdown { position: relative; }
 
 .dropdown-menu {
@@ -660,10 +669,10 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   right: 0;
   top: calc(100% + 8px);
   min-width: 232px;
-  background: var(--surface-raised);
+  background: var(--surface);
   border: 1px solid var(--hairline);
-  border-radius: 0;
-  box-shadow: var(--shadow-product);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
   z-index: 150;
   opacity: 0;
   visibility: hidden;
@@ -683,11 +692,9 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   display: block;
   width: 100%;
   padding: 13px 18px;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  font-family: var(--font-text);
+  font-size: var(--type-body-sm);
+  font-weight: 400;
   color: var(--ink-muted);
   text-align: left;
   background: none;
@@ -699,50 +706,50 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 }
 .dropdown-item:last-child { border-bottom: 0; }
 .dropdown-item:hover {
-  background: var(--surface);
-  color: var(--warm-white);
+  background: var(--canvas-soft);
+  color: var(--ink);
   text-decoration: none;
 }
 .dropdown-item-danger { color: var(--danger); }
 .dropdown-item-danger:hover { background: var(--danger-bg); color: var(--danger); }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    TABLE
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .data-table { width: 100%; border-collapse: collapse; }
 
 .data-table thead tr {
-  background: transparent;
+  background: var(--canvas-soft);
   border-bottom: 1px solid var(--hairline);
 }
 
 .data-table th {
   padding: 14px 20px;
   text-align: left;
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: .16em;
-  text-transform: uppercase;
+  font-family: var(--font-text);
+  font-size: var(--type-eyebrow);
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: .125px;
   color: var(--ink-muted);
   white-space: nowrap;
 }
 
 .data-table td {
   padding: 16px 20px;
-  font-size: 14px;
-  line-height: 22px;
-  color: var(--ink);
+  font-size: var(--type-body-sm);
+  line-height: 1.33;
+  color: var(--ink-secondary);
   border-bottom: 1px solid var(--hairline);
   vertical-align: middle;
 }
 
 .data-table tbody tr:last-child td { border-bottom: 0; }
-.data-table tbody tr:hover td { background: var(--surface-raised); }
+.data-table tbody tr:hover td { background: var(--canvas-soft); }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    TOAST
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 #toast-container {
   position: fixed;
   top: calc(var(--header) + 16px);
@@ -756,25 +763,25 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 
 .toast {
   padding: 14px 18px;
-  border-radius: 0;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--hairline);
-  background: var(--surface-raised);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--ink-secondary);
   font-size: 14px;
   line-height: 22px;
   animation: slideUp .2s var(--ease-out);
-  box-shadow: var(--shadow-product);
+  box-shadow: var(--shadow-elevated);
 }
-.toast-success { border-color: var(--ok);     color: var(--ok); }
-.toast-error   { border-color: var(--danger); color: var(--danger); }
-.toast-info    { border-color: var(--border-strong); color: var(--ink); }
+.toast-success { border-color: rgba(26,174,57,.28);  color: var(--ok); }
+.toast-error   { border-color: rgba(255,100,200,.28); color: var(--danger); }
+.toast-info    { border-color: var(--hairline); color: var(--ink-secondary); }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    LAYOUT HELPERS
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .page-wrap {
   min-height: 100vh;
-  background: var(--surface);
+  background: var(--canvas-soft);
 }
 
 .content-wrap {
@@ -792,70 +799,70 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 .section-pad { padding: var(--space-section-y) 0; }
 .tile-pad    { padding: var(--space-section-y-tight) 0; }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    TYPOGRAPHY HELPERS
-   Mapped onto AW's scale. .t-display/.t-hero/.t-section use the
-   display face; the app's headline sizes sit between AW's band
-   and card steps, so they clamp within that range.
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .t-hero {
   font-family: var(--font-display);
-  font-size: clamp(40px, 5vw, 76px);
+  font-size: var(--type-hero);
   font-weight: 700;
-  line-height: .95;
-  letter-spacing: -.03em;
-  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: -2.125px;
+  color: var(--ink);
 }
 
 .t-display {
   font-family: var(--font-display);
-  font-size: clamp(32px, 3.6vw, 56px);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -.025em;
+  font-size: var(--type-title-app);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -1.875px;
+  color: var(--ink);
 }
 
 .t-section {
   font-family: var(--font-display);
-  font-size: clamp(26px, 2.6vw, 44px);
-  font-weight: 600;
+  font-size: var(--type-section);
+  font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -.02em;
+  letter-spacing: -1px;
+  color: var(--ink);
 }
 
 .t-lead {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 1.6vw, 24px);
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: -.01em;
+  font-family: var(--font-text);
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: var(--ink-secondary);
 }
 
-/* Section headings across the app — 15 uses. Uppercase display type
-   keeps them distinct from .t-display page titles. */
 .t-tagline {
-  font-family: var(--font-display);
-  font-size: 14px;
+  font-family: var(--font-text);
+  font-size: var(--type-eyebrow);
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  line-height: 1.33;
+  letter-spacing: .125px;
+  color: var(--primary);
 }
 
 .t-body {
   font-family: var(--font-text);
-  font-size: 16px;
+  font-size: var(--type-body-md);
   font-weight: 400;
-  line-height: 27px;
+  line-height: 1.5;
   letter-spacing: 0;
+  color: var(--ink-secondary);
 }
 
 .t-caption {
   font-family: var(--font-text);
-  font-size: 14px;
+  font-size: var(--type-caption);
   font-weight: 400;
-  line-height: 22px;
+  line-height: 1.43;
   letter-spacing: 0;
+  color: var(--ink-muted);
 }
 
 .t-fine {
@@ -863,23 +870,22 @@ textarea.form-input { min-height: 140px; resize: vertical; }
   font-size: 13px;
   font-weight: 400;
   line-height: 20px;
-  letter-spacing: .01em;
+  letter-spacing: 0;
+  color: var(--ink-muted);
 }
 
-/* Colour helpers — these names are load-bearing in the views. */
 .t-ink     { color: var(--ink); }
 .t-muted   { color: var(--ink-muted); }
-.t-faint   { color: var(--slate-gray-text); }
-.t-blue    { color: var(--accent); }
-.t-on-dark { color: var(--warm-white); }
+.t-faint   { color: var(--ink-faint); }
+.t-blue    { color: var(--primary); }
+.t-on-dark { color: var(--on-primary); }
 
-/* Utility aliases used in a few views. */
-.mono    { font-family: var(--font-display); letter-spacing: .02em; }
+.mono    { font-family: var(--font-text); letter-spacing: 0; }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    RESPONSIVE
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 @media (max-width: 900px) {
   :root { --space-gutter: 16px; }
   .hide-mobile { display: none !important; }
@@ -889,15 +895,15 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 @media (max-width: 640px) {
   .content-wrap, .content-wrap-wide { padding: 0 16px; }
   .card-body { padding: 18px; }
-  .t-hero    { font-size: 34px; }
-  .t-display { font-size: 28px; }
-  .t-section { font-size: 24px; }
+  .t-hero    { font-size: 40px; letter-spacing: -1.2px; }
+  .t-display { font-size: 34px; letter-spacing: -1px; }
+  .t-section { font-size: 28px; letter-spacing: -.625px; }
   .data-table th, .data-table td { padding-left: 12px; padding-right: 12px; }
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    MISC UTILITIES
-   ───────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 .hidden  { display: none !important; }
 .sr-only {
   position: absolute;
@@ -909,7 +915,6 @@ textarea.form-input { min-height: 140px; resize: vertical; }
 }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Nothing is hidden or moved when the user asks for less motion. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
