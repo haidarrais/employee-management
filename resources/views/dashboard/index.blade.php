@@ -4,7 +4,25 @@
 @section('content')
 <div class="page-wrap">
   <section class="content-wrap section-pad">
-    <div style="max-width:820px;margin:0 auto;">
+    <div style="max-width:980px;margin:0 auto;">
+      @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-body" style="padding:32px;">
+          <p class="t-caption t-muted" style="margin:0 0 8px;">Management overview</p>
+          <h1 class="t-display" style="margin-bottom:24px;">Today's Workforce</h1>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+            <div class="card"><div class="card-body"><p class="t-caption t-muted">Present</p><p class="t-display" style="font-size:36px">—</p></div></div>
+            <div class="card"><div class="card-body"><p class="t-caption t-muted">Late</p><p class="t-display" style="font-size:36px">—</p></div></div>
+            <div class="card"><div class="card-body"><p class="t-caption t-muted">Working Now</p><p class="t-display" style="font-size:36px">—</p></div></div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;">
+            <a href="{{ route('qr.generate') }}" class="btn-primary">Generate QR</a>
+            <a href="{{ route('reports.payroll') }}" class="btn-ghost-pill">Payroll Report</a>
+            <a href="{{ route('attendance.history') }}" class="btn-ghost-pill">Attendance</a>
+          </div>
+        </div>
+      </div>
+      @else
       <div class="card" style="margin-bottom:24px;">
         <div class="card-body" style="padding:32px;">
           <p class="t-caption t-muted" style="margin:0 0 8px;">Good {{ now()->hour < 12 ? 'morning' : 'afternoon' }}, {{ Auth::user()->name }}</p>
@@ -18,6 +36,7 @@
           </div>
         </div>
       </div>
+      @endif
 
       <div class="card">
         <div class="card-header"><h2 class="t-section" style="font-size:22px;">Recent Sessions</h2></div>
@@ -38,19 +57,4 @@
     </div>
   </section>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
- const el=document.getElementById('today-status');
- try {
-  const r=await fetch('/attendance/today',{headers:{Accept:'application/json'}});
-  const d=await r.json();
-  if(d.has_open_session){el.innerHTML='<p class="t-body" style="font-weight:600">🟢 Working</p><p class="t-caption">Your current session is active. Scan QR to checkout.</p>';}
-  else if(d.has_attended){el.innerHTML='<p class="t-body" style="font-weight:600">Session completed</p><p class="t-caption">Scan QR to start another session.</p>';}
-  else {el.innerHTML='<p class="t-body" style="font-weight:600">Ready to check in</p><p class="t-caption">Scan the workplace QR code.</p>';}
- } catch(e) {}
-});
-</script>
-@endpush
 @endsection
