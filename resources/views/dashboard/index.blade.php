@@ -34,11 +34,10 @@
 
   {{-- ── Employee: scan tile ─────────────────────────────────── --}}
   @if(Auth::user()->isEmployee())
-  {{-- Light tile --}}
   <section style="background:var(--canvas);padding:var(--space-section) 22px;">
     <div style="max-width:640px;margin:0 auto;text-align:center;">
       <h1 class="t-display t-ink" style="margin:0 0 12px;">Mark Attendance</h1>
-      <p class="t-lead t-muted" style="margin:0 0 32px;">Scan the QR code to record your attendance for today.</p>
+      <p class="t-lead t-muted" style="margin:0 0 32px;">Scan the QR code to check in or check out. Use the same flow for lunch breaks and end-of-day checkout.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
         <button onclick="openQRScanner()" class="btn-primary">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -69,7 +68,7 @@
   <section style="background:var(--canvas);padding:var(--space-section) 22px;">
     <div style="max-width:640px;margin:0 auto;text-align:center;">
       <h1 class="t-display t-ink" style="margin:0 0 12px;">Attendance Management</h1>
-      <p class="t-lead t-muted" style="margin:0 0 32px;">Generate QR codes for check-in or review attendance records.</p>
+      <p class="t-lead t-muted" style="margin:0 0 32px;">Generate QR codes for check-in/check-out sessions or review attendance records.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
         <a href="{{ route('qr.generate') }}" class="btn-primary">Generate QR Code</a>
         <a href="{{ route('reports.payroll') }}" class="btn-ghost-pill">Payroll Report</a>
@@ -106,12 +105,19 @@
               @endif
             </div>
             <div>
-              <p class="t-body t-ink" style="margin:0;font-weight:600;">{{ $record->created_at->format('l, F j') }}</p>
-              <p class="t-caption t-muted" style="margin:0;">{{ $record->created_at->format('g:i A') }}</p>
+              <p class="t-body t-ink" style="margin:0;font-weight:600;">{{ optional($record->check_in_at ?? $record->created_at)->format('l, F j') }}</p>
+              <p class="t-caption t-muted" style="margin:0;">
+                In {{ optional($record->check_in_at ?? $record->created_at)->format('g:i A') }}
+                @if($record->check_out_at)
+                · Out {{ $record->check_out_at->format('g:i A') }}
+                @else
+                · Open session
+                @endif
+              </p>
             </div>
           </div>
           <span class="badge {{ $record->status === 'confirmed' ? 'badge-success' : ($record->status === 'rejected' ? 'badge-error' : 'badge-gray') }}">
-            {{ ucfirst($record->status) }}
+            {{ $record->isOpen() ? 'Checked in' : ucfirst($record->status) }}
           </span>
         </div>
         @empty
@@ -162,6 +168,7 @@
         <p class="t-caption t-ink" style="margin:0 0 8px;font-weight:600;">Instructions</p>
         <ol style="margin:0;padding-left:18px;" class="t-caption t-muted">
           <li style="margin-bottom:4px;">Point your camera at the QR code</li>
+          <li style="margin-bottom:4px;">If you are out, this checks you in; if you are in, this checks you out</li>
           <li style="margin-bottom:4px;">You must be within {{ (int) $geofenceRadius }}m of the workplace</li>
           <li>Allow location access when prompted</li>
         </ol>
@@ -180,11 +187,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const d = await r.json();
     const el = document.getElementById('today-status');
     if (!el) return;
-    if (d.has_attended) {
-      const latest = d.data?.latest;
+
+    if (d.has_open_session) {
+      const open = d.data?.open_session;
       el.innerHTML = `
         <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Checked in ✓</p>
-        <p class="t-body" style="color:var(--faint);margin:0;">Recorded at ${latest?.time || ''}${latest?.distance_meters ? ' · ' + latest.distance_meters + 'm' : ''}</p>
+        <p class="t-body" style="color:var(--faint);margin:0;">Current session started at ${open?.check_in_time || open?.time || ''}. Scan again to check out.</p>
+      `;
+    } else if (d.has_attended) {
+      const latest = d.data?.latest;
+      el.innerHTML = `
+        <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Checked out ✓</p>
+        <p class="t-body" style="color:var(--faint);margin:0;">Last session ended at ${latest?.check_out_time || latest?.time || ''}. Scan again to start a new session.</p>
       `;
     } else {
       el.innerHTML = `
