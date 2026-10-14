@@ -55,8 +55,10 @@
           </button>
           <div class="dropdown-menu">
             <a href="{{ route('profile') }}" class="dropdown-item">Profile Settings</a>
-            @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
+            @if(Auth::user()->canGenerateQrCodes())
             <a href="{{ route('qr.generate') }}" class="dropdown-item">Generate QR Code</a>
+            @endif
+            @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
             <a href="{{ route('attendance.history') }}" class="dropdown-item">Attendance History</a>
             <a href="{{ route('reports.payroll') }}" class="dropdown-item">Payroll Report</a>
             @endif
