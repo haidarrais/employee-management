@@ -103,7 +103,7 @@
         @foreach([
           'Display this QR code on screen or print it.',
           'Employees open the Attendance app and tap Scan QR Code.',
-          'They must be within ' . \App\Models\QRCode::GEOFENCE_RADIUS_METERS . 'm of the workplace.',
+          'They must be within ' . (int) $geofenceRadius . 'm of the workplace.',
           'Each code is single-use — generate a new one for the next session.',
         ] as $i => $step)
         <li style="display:flex;align-items:flex-start;gap:14px;">

@@ -62,6 +62,7 @@
             @endif
             @if(Auth::user()->isAdmin())
             <a href="{{ route('admin.users') }}" class="dropdown-item">Manage Users</a>
+            <a href="{{ route('admin.location') }}" class="dropdown-item">Workplace Location</a>
             <a href="{{ route('audit.logs') }}" class="dropdown-item">Audit Logs</a>
             @endif
             <div style="height:1px;background:var(--hairline);margin:0;"></div>

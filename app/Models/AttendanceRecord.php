@@ -94,15 +94,19 @@ class AttendanceRecord extends Model
 
     /**
      * Check if the attendance is within the geofence radius.
-     * 
-     * Compares the recorded distance against the configured geofence radius.
-     * 
+     *
+     * Compares the recorded distance against the currently configured radius,
+     * so a record's badge follows the operator setting rather than a constant.
+     *
      * @return bool True if within geofence, false otherwise
      */
     public function isWithinGeofence(): bool
     {
-        return $this->distance_meters !== null
-            && $this->distance_meters <= self::GEOFENCE_RADIUS_METERS;
+        if ($this->distance_meters === null) {
+            return false;
+        }
+
+        return $this->distance_meters <= app(\App\Services\GeolocationService::class)->getGeofenceRadius();
     }
 
     /**

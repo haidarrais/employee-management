@@ -51,17 +51,37 @@ class AuditLog extends Model
 
     /**
      * Ensure metadata is always returned as an array regardless of storage format.
+     *
+     * The `metadata` attribute is cast to `array`, so passing an array in is
+     * correct and Laravel encodes it once. Two legacy shapes still exist in the
+     * table and both must read back as arrays:
+     *
+     *   - a JSON string that decodes to an array (correctly written rows)
+     *   - a JSON string that decodes to *another JSON string*, which is what
+     *     AuditService::log() produced by calling json_encode() before handing
+     *     the value to a model that encodes it again. Reading those naively
+     *     yielded [] and the audit page's detail column rendered blank for
+     *     every historical entry.
      */
     public function getMetadataAttribute(mixed $value): array
     {
         if (is_array($value)) {
             return $value;
         }
-        if (is_string($value) && $value !== '') {
-            $decoded = json_decode($value, true);
-            return is_array($decoded) ? $decoded : [];
+
+        if (!is_string($value) || $value === '') {
+            return [];
         }
-        return [];
+
+        $decoded = json_decode($value, true);
+
+        // Legacy double-encoded row: the first decode returns the inner JSON
+        // string rather than the array itself.
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**

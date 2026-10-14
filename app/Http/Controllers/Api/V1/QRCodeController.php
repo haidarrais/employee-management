@@ -145,7 +145,7 @@ class QRCodeController extends Controller
         }
 
         // Geofence check. Fails closed: without a configured workplace we cannot verify presence.
-        $geofenceRadius  = QRCode::GEOFENCE_RADIUS_METERS;
+        $geofenceRadius  = $this->geolocation->getGeofenceRadius();
         $distanceMeters  = $this->geolocation->getDistanceToWorkplace($latitude, $longitude);
 
         if ($distanceMeters === null) {

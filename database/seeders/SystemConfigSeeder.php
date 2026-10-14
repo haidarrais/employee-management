@@ -34,15 +34,18 @@ class SystemConfigSeeder extends Seeder
             ]
         );
 
-        // Workplace coordinates (example: Jakarta office)
+        // Workplace position and geofence radius (example: Jakarta office).
+        // Both are editable from the admin Location page; this only sets the
+        // starting values so a fresh install has a working fence.
         SystemConfig::updateOrCreate(
-            ['key' => 'workplace_coordinates'],
+            ['key' => \App\Services\GeolocationService::CONFIG_KEY],
             [
                 'value' => json_encode([
-                    'latitude'  => -6.2088,
-                    'longitude' => 106.8456,
+                    'latitude'      => -6.2088,
+                    'longitude'     => 106.8456,
+                    'radius_meters' => \App\Services\GeolocationService::DEFAULT_GEOFENCE_RADIUS,
                 ]),
-                'description' => 'Workplace GPS coordinates for geofence validation.',
+                'description' => 'Workplace GPS coordinates and accepted radius for geofence validation.',
             ]
         );
 

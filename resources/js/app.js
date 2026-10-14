@@ -251,7 +251,12 @@ window.App = {
         return deg * (Math.PI / 180);
     },
     
-    // Check if within geofence
+    // Check if within geofence.
+    //
+    // The radius is an operator setting resolved server-side; this default is
+    // only a fallback for callers that do not pass one, and matches
+    // GeolocationService::DEFAULT_GEOFENCE_RADIUS. The server re-checks every
+    // check-in, so a stale value here can only affect the client's own hint.
     async checkGeofence(workplaceLat, workplaceLon, radiusMeters = 10) {
         try {
             const location = await this.getLocation();

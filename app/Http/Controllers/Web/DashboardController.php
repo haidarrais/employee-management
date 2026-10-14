@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
+use App\Services\GeolocationService;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(GeolocationService $geolocation)
     {
         $user = Auth::user();
 
@@ -17,6 +18,11 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        return view('dashboard.index', compact('recentAttendance'));
+        // The geofence radius is an operator setting, so the check-in
+        // instructions have to state the real value rather than a constant.
+        return view('dashboard.index', [
+            'recentAttendance' => $recentAttendance,
+            'geofenceRadius'   => $geolocation->getGeofenceRadius(),
+        ]);
     }
 }

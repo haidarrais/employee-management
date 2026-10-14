@@ -22,7 +22,10 @@ class AuditService
         return AuditLog::create([
             'user_id' => $userId,
             'action' => $action,
-            'metadata' => json_encode($metadata),
+            // Pass the array, not json_encode($metadata): the model casts
+            // `metadata` to array, so encoding here produced a JSON string
+            // inside a JSON string and every read returned [].
+            'metadata' => $metadata,
             'ip_address' => $ipAddress,
         ]);
     }

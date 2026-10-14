@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Services\AuditService;
+use App\Services\GeolocationService;
 use App\Services\QRCodeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,8 +21,9 @@ use Illuminate\View\View;
 class QrCodeController extends Controller
 {
     public function __construct(
-        private readonly QRCodeService $qrCodeService,
-        private readonly AuditService  $auditService,
+        private readonly QRCodeService      $qrCodeService,
+        private readonly AuditService       $auditService,
+        private readonly GeolocationService $geolocation,
     ) {}
 
     /**
@@ -51,6 +53,7 @@ class QrCodeController extends Controller
                 'qrCode'          => $qrCodeRecord,
                 'expiresAt'       => $qrCodeRecord->expires_at->toIso8601String(),
                 'validityMinutes' => \App\Models\QRCode::VALIDITY_MINUTES,
+                'geofenceRadius'  => $this->geolocation->getGeofenceRadius(),
             ]);
         } catch (\Throwable $e) {
             report($e);

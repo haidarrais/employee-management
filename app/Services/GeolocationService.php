@@ -7,6 +7,11 @@ use App\Models\SystemConfig;
 /**
  * Geolocation Service for calculating distances and validating geofences.
  * Uses the Haversine formula to calculate distances between coordinates.
+ *
+ * The workplace position and the accepted radius are operator settings, stored
+ * in `system_configs` under the key `workplace_coordinates` and editable from
+ * the admin Location page. Nothing here is hardcoded: the constants below are
+ * only the fallbacks used when the row is missing or incomplete.
  */
 class GeolocationService
 {
@@ -16,14 +21,31 @@ class GeolocationService
     private const EARTH_RADIUS_METERS = 6371000;
 
     /**
-     * Default geofence radius in meters (10 meters).
+     * Fallback geofence radius, in meters, used only when no radius is
+     * configured. The seeded default and the admin page both start here.
      */
-    private const DEFAULT_GEOFENCE_RADIUS = 10;
+    public const DEFAULT_GEOFENCE_RADIUS = 10;
+
+    /**
+     * Bounds for the configured radius, in meters.
+     *
+     * The floor is above the ~5-10m accuracy of consumer GPS, because a smaller
+     * fence would reject a correctly positioned employee at random. The ceiling
+     * is generous enough for a large site while still being a fence rather than
+     * "anywhere in the city".
+     */
+    public const MIN_GEOFENCE_RADIUS = 5;
+    public const MAX_GEOFENCE_RADIUS = 10000;
+
+    /**
+     * The `system_configs` key holding the workplace position and radius.
+     */
+    public const CONFIG_KEY = 'workplace_coordinates';
 
     /**
      * Calculate the distance between two coordinates using the Haversine formula.
-     * 
-     * The Haversine formula determines the great-circle distance between 
+     *
+     * The Haversine formula determines the great-circle distance between
      * two points on a sphere given their longitudes and latitudes.
      *
      * @param float $lat1 Latitude of the first point in decimal degrees
@@ -68,7 +90,7 @@ class GeolocationService
      * @param float $employeeLon Employee's current longitude
      * @param float $workplaceLat Workplace latitude
      * @param float $workplaceLon Workplace longitude
-     * @param float $radiusMeters Radius in meters (default: 10 meters)
+     * @param float|null $radiusMeters Radius in meters; null uses the configured radius
      * @return bool True if the employee is within the geofence, false otherwise
      */
     public function isWithinGeofence(
@@ -76,7 +98,7 @@ class GeolocationService
         float $employeeLon,
         float $workplaceLat,
         float $workplaceLon,
-        float $radiusMeters = self::DEFAULT_GEOFENCE_RADIUS
+        ?float $radiusMeters = null
     ): bool {
         $distance = $this->calculateDistance(
             $employeeLat,
@@ -85,7 +107,42 @@ class GeolocationService
             $workplaceLon
         );
 
-        return $distance <= $radiusMeters;
+        return $distance <= ($radiusMeters ?? $this->getGeofenceRadius());
+    }
+
+    /**
+     * Read the stored workplace row.
+     *
+     * Returns null when the row is absent or does not carry a usable pair of
+     * coordinates, which callers treat as "not configured" and fail closed.
+     *
+     * @return array{latitude: float, longitude: float, radius_meters: float}|null
+     */
+    public function getWorkplaceConfig(): ?array
+    {
+        $config = SystemConfig::find(self::CONFIG_KEY);
+
+        if (!$config) {
+            return null;
+        }
+
+        $decoded = json_decode($config->value, true);
+
+        if (!is_array($decoded) || !isset($decoded['latitude'], $decoded['longitude'])) {
+            return null;
+        }
+
+        // A row written before the radius was configurable has no radius key.
+        // Treat that as the default rather than as "no radius".
+        $radius = isset($decoded['radius_meters']) && is_numeric($decoded['radius_meters'])
+            ? (float) $decoded['radius_meters']
+            : (float) self::DEFAULT_GEOFENCE_RADIUS;
+
+        return [
+            'latitude'      => (float) $decoded['latitude'],
+            'longitude'     => (float) $decoded['longitude'],
+            'radius_meters' => $this->clampRadius($radius),
+        ];
     }
 
     /**
@@ -95,27 +152,71 @@ class GeolocationService
      */
     public function getWorkplaceCoordinates(): ?array
     {
-        $config = SystemConfig::where('key', 'workplace_coordinates')->first();
+        $config = $this->getWorkplaceConfig();
 
-        if (!$config) {
-            return null;
-        }
-
-        $coordinates = json_decode($config->value, true);
-
-        if (!isset($coordinates['latitude'], $coordinates['longitude'])) {
+        if ($config === null) {
             return null;
         }
 
         return [
-            'latitude' => (float) $coordinates['latitude'],
-            'longitude' => (float) $coordinates['longitude'],
+            'latitude'  => $config['latitude'],
+            'longitude' => $config['longitude'],
         ];
     }
 
     /**
+     * The configured geofence radius in meters.
+     *
+     * Falls back to the default when the workplace row is missing entirely, so
+     * callers that only need the radius do not have to null-check.
+     */
+    public function getGeofenceRadius(): float
+    {
+        $config = $this->getWorkplaceConfig();
+
+        return $config['radius_meters'] ?? (float) self::DEFAULT_GEOFENCE_RADIUS;
+    }
+
+    /**
+     * Persist the workplace position and radius.
+     *
+     * Only this method writes the row, so the stored shape stays in one place.
+     *
+     * @param float $latitude  Decimal degrees, -90..90
+     * @param float $longitude Decimal degrees, -180..180
+     * @param float $radiusMeters Accepted distance from the workplace
+     */
+    public function setWorkplaceConfig(
+        float $latitude,
+        float $longitude,
+        float $radiusMeters
+    ): void {
+        SystemConfig::updateOrCreate(
+            ['key' => self::CONFIG_KEY],
+            [
+                'value' => json_encode([
+                    'latitude'      => $latitude,
+                    'longitude'     => $longitude,
+                    'radius_meters' => $this->clampRadius($radiusMeters),
+                ]),
+                'description' => 'Workplace GPS coordinates and accepted radius for geofence validation.',
+            ]
+        );
+    }
+
+    /**
+     * Keep a radius inside the supported bounds.
+     */
+    public function clampRadius(float $radius): float
+    {
+        return max(
+            (float) self::MIN_GEOFENCE_RADIUS,
+            min((float) self::MAX_GEOFENCE_RADIUS, $radius)
+        );
+    }
+
+    /**
      * Check if the employee is within the workplace geofence.
-     * Uses the default 10-meter radius from system configuration.
      *
      * @param float $employeeLat Employee's current latitude
      * @param float $employeeLon Employee's current longitude
@@ -125,7 +226,7 @@ class GeolocationService
         float $employeeLat,
         float $employeeLon
     ): bool {
-        $workplace = $this->getWorkplaceCoordinates();
+        $workplace = $this->getWorkplaceConfig();
 
         if ($workplace === null) {
             return false;
@@ -136,7 +237,7 @@ class GeolocationService
             $employeeLon,
             $workplace['latitude'],
             $workplace['longitude'],
-            self::DEFAULT_GEOFENCE_RADIUS
+            $workplace['radius_meters']
         );
     }
 

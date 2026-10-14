@@ -132,17 +132,25 @@ class MFAServiceTest extends TestCase
     }
 
     /**
-     * Test that generateQRCodeSvg returns a valid SVG data URL.
+     * Test that the provisioning URI is rendered as a real, scannable PNG.
+     *
+     * This previously asserted a `data:otpauth/...` prefix, which was not an
+     * image at all and could not be rendered as a QR code — the MFA setup page
+     * had nothing to show. The method now returns a base64 PNG, so the test
+     * asserts an actual image and that the otpauth URI survives inside it.
      */
-    public function test_generate_qr_code_svg_returns_svg_data_url(): void
+    public function test_generate_qr_code_returns_a_png_data_url(): void
     {
         $secret = $this->mfaService->generateSecret();
-        $email = 'test@example.com';
-        
-        $qrUrl = $this->mfaService->generateQRCodeSvg($secret, $email);
-        
-        // Returns a data URL with the otpauth URI
-        $this->assertStringStartsWith('data:otpauth/', $qrUrl);
+        $email  = 'test@example.com';
+
+        $qrUrl = $this->mfaService->generateQRCodeDataUri($secret, $email);
+
+        $this->assertStringStartsWith('data:image/png;base64,', $qrUrl);
+
+        $binary = base64_decode(substr($qrUrl, strlen('data:image/png;base64,')), true);
+        $this->assertNotFalse($binary, 'The data URL does not carry valid base64.');
+        $this->assertStringStartsWith("\x89PNG", $binary, 'The decoded payload is not a PNG.');
     }
 
     /**

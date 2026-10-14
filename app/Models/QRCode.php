@@ -38,7 +38,11 @@ class QRCode extends Model
     const VALIDITY_MINUTES = 5;
 
     /**
-     * Geofence radius in meters for attendance validation
+     * Default geofence radius in meters, used only when no radius is configured.
+     *
+     * The effective radius is an operator setting held in `system_configs`
+     * (see GeolocationService::getGeofenceRadius()); this constant exists so
+     * legacy callers and the seeder have a sane starting value.
      */
     const GEOFENCE_RADIUS_METERS = 10;
 

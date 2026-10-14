@@ -162,7 +162,7 @@
         <p class="t-caption t-ink" style="margin:0 0 8px;font-weight:600;">Instructions</p>
         <ol style="margin:0;padding-left:18px;" class="t-caption t-muted">
           <li style="margin-bottom:4px;">Point your camera at the QR code</li>
-          <li style="margin-bottom:4px;">You must be within 10m of the workplace</li>
+          <li style="margin-bottom:4px;">You must be within {{ (int) $geofenceRadius }}m of the workplace</li>
           <li>Allow location access when prompted</li>
         </ol>
       </div>

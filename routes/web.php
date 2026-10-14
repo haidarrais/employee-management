@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthController as WebAuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\AttendanceController as WebAttendanceController;
 use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\LocationController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\QrCodeController;
 use App\Http\Controllers\Web\ReportController;
@@ -70,6 +71,11 @@ Route::middleware(['auth', 'web'])->group(function () {
         Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
         Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
+
+        // Workplace position and geofence tolerance.
+        Route::get('/location', [LocationController::class, 'edit'])->name('location');
+        Route::put('/location', [LocationController::class, 'update'])->name('location.update');
+        Route::get('/location/suggest', [LocationController::class, 'suggest'])->name('location.suggest');
     });
 
     // Reports & schedule

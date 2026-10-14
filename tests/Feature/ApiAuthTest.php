@@ -47,6 +47,8 @@ class ApiAuthTest extends TestCase
 
     public function test_login_is_throttled(): void
     {
+        // throttle:5,1 permits five attempts, so all five return 422 and the
+        // sixth is the first refused with 429.
         for ($i = 0; $i < 5; $i++) {
             $this->postJson('/api/v1/auth/login', ['email' => 'x@example.test', 'password' => 'bad'])
                 ->assertStatus(422);
