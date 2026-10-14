@@ -26,6 +26,7 @@
                placeholder="Search by name or email…">
         <select name="role" class="form-input" style="width:auto;">
           <option value="">All roles</option>
+          <option value="superadmin"   {{ request('role') === 'superadmin'   ? 'selected' : '' }}>Superadmin</option>
           <option value="admin"        {{ request('role') === 'admin'        ? 'selected' : '' }}>Admin</option>
           <option value="management"   {{ request('role') === 'management'   ? 'selected' : '' }}>Management</option>
           <option value="qr_generator" {{ request('role') === 'qr_generator' ? 'selected' : '' }}>QR Generation Only</option>
@@ -57,6 +58,20 @@
             </thead>
             <tbody>
               @forelse($users as $user)
+              @php
+                $roleLabel = match($user->role) {
+                  'superadmin' => 'Superadmin',
+                  'qr_generator' => 'QR Generation Only',
+                  default => ucfirst($user->role),
+                };
+                $roleClass = match($user->role) {
+                  'superadmin' => 'badge-error',
+                  'admin' => 'badge-error',
+                  'management' => 'badge-warning',
+                  'qr_generator' => 'badge-blue',
+                  default => 'badge-gray',
+                };
+              @endphp
               <tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
@@ -72,9 +87,7 @@
                   </div>
                 </td>
                 <td>
-                  <span class="badge {{ $user->role === 'admin' ? 'badge-error' : ($user->role === 'management' ? 'badge-warning' : ($user->role === 'qr_generator' ? 'badge-blue' : 'badge-gray')) }}">
-                    {{ $user->role === 'qr_generator' ? 'QR Generation Only' : ucfirst($user->role) }}
-                  </span>
+                  <span class="badge {{ $roleClass }}">{{ $roleLabel }}</span>
                 </td>
                 <td>
                   @if($user->role === 'employee')
@@ -111,7 +124,7 @@
               </tr>
               @empty
               <tr>
-                <td colspan="5" style="text-align:center;padding:48px;color:var(--muted);">No users found.</td>
+                <td colspan="6" style="text-align:center;padding:48px;color:var(--muted);">No users found.</td>
               </tr>
               @endforelse
             </tbody>
