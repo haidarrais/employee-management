@@ -58,14 +58,17 @@
             @if(Auth::user()->canGenerateQrCodes())
             <a href="{{ route('qr.generate') }}" class="dropdown-item">Generate QR Code</a>
             @endif
-            @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
+            @if(Auth::user()->isSuperAdmin() || Auth::user()->isAdmin() || Auth::user()->isManagement())
             <a href="{{ route('attendance.history') }}" class="dropdown-item">Attendance History</a>
             <a href="{{ route('reports.payroll') }}" class="dropdown-item">Payroll Report</a>
             @endif
-            @if(Auth::user()->isAdmin())
+            @if(Auth::user()->isSuperAdmin() || Auth::user()->isAdmin())
             <a href="{{ route('admin.users') }}" class="dropdown-item">Manage Users</a>
             <a href="{{ route('admin.location') }}" class="dropdown-item">Workplace Location</a>
             <a href="{{ route('audit.logs') }}" class="dropdown-item">Audit Logs</a>
+            @endif
+            @if(Auth::user()->isSuperAdmin())
+            <a href="{{ route('admin.attendance.maintenance') }}" class="dropdown-item">Attendance Maintenance</a>
             @endif
             <div style="height:1px;background:var(--hairline);margin:0;"></div>
             <form method="POST" action="{{ route('logout') }}">

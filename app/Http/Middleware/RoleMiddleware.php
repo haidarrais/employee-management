@@ -77,8 +77,9 @@ class RoleMiddleware
 
     /**
      * Check if user has any of the specified roles.
-     * 
-     * Administrator role bypasses all authorization checks.
+     *
+     * Superadmin bypasses every authorization check. Admin still bypasses
+     * normal checks, but not routes that explicitly require superadmin.
      *
      * @param User $user
      * @param array<string> $roles
@@ -86,8 +87,13 @@ class RoleMiddleware
      */
     private function hasAnyRole(User $user, array $roles): bool
     {
-        // Administrator has unrestricted access (bypasses all authorization checks)
-        if ($user->isAdmin()) {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        $requiresSuperadmin = in_array(User::ROLE_SUPERADMIN, $roles, true);
+
+        if ($user->isAdmin() && !$requiresSuperadmin) {
             return true;
         }
 

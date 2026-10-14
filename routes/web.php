@@ -78,6 +78,14 @@ Route::middleware(['auth', 'web'])->group(function () {
         Route::get('/location/suggest', [LocationController::class, 'suggest'])->name('location.suggest');
     });
 
+    // Superadmin-only maintenance routes. These are intentionally outside
+    // the normal admin group because regular admins must not delete records.
+    Route::middleware(['role:superadmin', 'password.confirm'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/attendance-maintenance', [AdminController::class, 'attendanceMaintenance'])->name('attendance.maintenance');
+        Route::get('/attendance-maintenance/export', [AdminController::class, 'exportAttendance'])->name('attendance.export');
+        Route::delete('/attendance-maintenance', [AdminController::class, 'cleanupAttendance'])->name('attendance.cleanup');
+    });
+
     // Reports & schedule
     Route::middleware(['role:admin,management', 'password.confirm'])->group(function () {
         Route::get('/reports/payroll', [ReportController::class, 'index'])->name('reports.payroll');
