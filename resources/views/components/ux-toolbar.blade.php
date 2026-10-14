@@ -1,0 +1,1 @@
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">{{ $slot }}</div>
