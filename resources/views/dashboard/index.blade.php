@@ -3,267 +3,54 @@
 
 @section('content')
 <div class="page-wrap">
-
-  {{-- ── Sub-nav ──────────────────────────────────────────────── --}}
-  <div class="sub-nav">
-    <div class="sub-nav__inner">
-      <span class="sub-nav__title">Dashboard</span>
-      <div class="sub-nav__links">
-        <a href="{{ route('attendance.history') }}" class="sub-nav__link">History</a>
-        @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
-        <a href="{{ route('qr.generate') }}" class="sub-nav__link">Generate QR</a>
-        <a href="{{ route('reports.payroll') }}" class="sub-nav__link">Reports</a>
-        @endif
-        @if(Auth::user()->isAdmin())
-        <a href="{{ route('admin.users') }}" class="sub-nav__link">Users</a>
-        <a href="{{ route('audit.logs') }}" class="sub-nav__link">Audit</a>
-        @endif
-        <a href="{{ route('profile') }}" class="btn-primary btn-sm" style="margin-left:8px;">Profile</a>
-      </div>
-    </div>
-  </div>
-
-  {{-- ── Flash messages ──────────────────────────────────────── --}}
-  @if(session('error'))
-  <div style="background:var(--parchment);padding:0 22px;">
-    <div style="max-width:980px;margin:0 auto;padding-top:16px;">
-      <div class="alert alert-error">{{ session('error') }}</div>
-    </div>
-  </div>
-  @endif
-
-  {{-- ── Employee: scan tile ─────────────────────────────────── --}}
-  @if(Auth::user()->isEmployee())
-  <section style="background:var(--canvas);padding:var(--space-section) 22px;">
-    <div style="max-width:640px;margin:0 auto;text-align:center;">
-      <h1 class="t-display t-ink" style="margin:0 0 12px;">Mark Attendance</h1>
-      <p class="t-lead t-muted" style="margin:0 0 32px;">Scan the QR code to check in or check out. Use the same flow for lunch breaks and end-of-day checkout.</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <button onclick="openQRScanner()" class="btn-primary">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Scan QR Code
-        </button>
-        <a href="{{ route('attendance.history') }}" class="btn-ghost-pill">View History</a>
-      </div>
-    </div>
-  </section>
-
-  {{-- Dark tile: today's status --}}
-  <section style="background:var(--tile-1);padding:var(--space-section) 22px;">
-    <div style="max-width:640px;margin:0 auto;text-align:center;">
-      <p class="t-tagline" style="color:var(--faint);margin:0 0 16px;">Today</p>
-      <div id="today-status">
-        <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Not yet recorded</p>
-        <p class="t-body" style="color:var(--faint);margin:0;">Scan the QR code above to check in.</p>
-      </div>
-    </div>
-  </section>
-  @endif
-
-  {{-- ── Admin/Management: hero tile ───────────────────────── --}}
-  @if(Auth::user()->isAdmin() || Auth::user()->isManagement())
-  <section style="background:var(--canvas);padding:var(--space-section) 22px;">
-    <div style="max-width:640px;margin:0 auto;text-align:center;">
-      <h1 class="t-display t-ink" style="margin:0 0 12px;">Attendance Management</h1>
-      <p class="t-lead t-muted" style="margin:0 0 32px;">Generate QR codes for check-in/check-out sessions or review attendance records.</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="{{ route('qr.generate') }}" class="btn-primary">Generate QR Code</a>
-        <a href="{{ route('reports.payroll') }}" class="btn-ghost-pill">Payroll Report</a>
-      </div>
-    </div>
-  </section>
-  @endif
-
-  {{-- ── Recent attendance (parchment tile) ─────────────────── --}}
-  <section style="background:var(--parchment);padding:var(--space-section) 22px;">
-    <div style="max-width:980px;margin:0 auto;">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px;">
-        <h2 class="t-section t-ink" style="margin:0;">Recent Attendance</h2>
-        <a href="{{ route('attendance.history') }}" class="t-caption t-blue">View all →</a>
+  <section class="content-wrap section-pad">
+    <div style="max-width:820px;margin:0 auto;">
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-body" style="padding:32px;">
+          <p class="t-caption t-muted" style="margin:0 0 8px;">Good {{ now()->hour < 12 ? 'morning' : 'afternoon' }}, {{ Auth::user()->name }}</p>
+          <h1 class="t-display" style="margin-bottom:20px;">Today's Attendance</h1>
+          <div id="today-status" style="padding:20px;background:var(--canvas-soft);border-radius:var(--radius-lg);">
+            <p class="t-body" style="margin:0;color:var(--ink-muted);">Checking attendance status...</p>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;">
+            <button onclick="openQRScanner()" class="btn-primary">Scan QR Code</button>
+            <a href="{{ route('attendance.history') }}" class="btn-ghost-pill">View Timeline</a>
+          </div>
+        </div>
       </div>
 
       <div class="card">
-        @forelse($recentAttendance as $record)
-        <div style="display:flex;align-items:center;justify-content:space-between;
-                    padding:16px 24px;border-bottom:1px solid var(--soft);">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:36px;height:36px;flex-shrink:0;
-                        display:flex;align-items:center;justify-content:center;
-                        background:{{ $record->status === 'confirmed' ? 'var(--ok-bg)' : ($record->status === 'rejected' ? 'var(--danger-bg)' : 'var(--soft)') }};
-                        color:{{ $record->status === 'confirmed' ? 'var(--ok)' : ($record->status === 'rejected' ? 'var(--danger)' : 'var(--muted)') }};">
-              @if($record->status === 'confirmed')
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-              </svg>
-              @else
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              @endif
-            </div>
+        <div class="card-header"><h2 class="t-section" style="font-size:22px;">Recent Sessions</h2></div>
+        <div class="card-body">
+          @forelse($recentAttendance as $record)
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--hairline);">
             <div>
-              <p class="t-body t-ink" style="margin:0;font-weight:600;">{{ optional($record->check_in_at ?? $record->created_at)->format('l, F j') }}</p>
-              <p class="t-caption t-muted" style="margin:0;">
-                In {{ optional($record->check_in_at ?? $record->created_at)->format('g:i A') }}
-                @if($record->check_out_at)
-                · Out {{ $record->check_out_at->format('g:i A') }}
-                @else
-                · Open session
-                @endif
-              </p>
+              <p class="t-body" style="margin:0;font-weight:600;">{{ optional($record->check_in_at ?? $record->created_at)->format('l, d M Y') }}</p>
+              <p class="t-caption t-muted" style="margin:4px 0 0;">{{ optional($record->check_in_at ?? $record->created_at)->format('H:i') }} - {{ $record->check_out_at?->format('H:i') ?? 'Working now' }}</p>
             </div>
+            <span class="badge {{ $record->isOpen() ? 'badge-success' : 'badge-gray' }}">{{ $record->isOpen() ? 'Working' : 'Completed' }}</span>
           </div>
-          <span class="badge {{ $record->status === 'confirmed' ? 'badge-success' : ($record->status === 'rejected' ? 'badge-error' : 'badge-gray') }}">
-            {{ $record->isOpen() ? 'Checked in' : ucfirst($record->status) }}
-          </span>
+          @empty
+          <p class="t-body t-muted">No attendance sessions yet.</p>
+          @endforelse
         </div>
-        @empty
-        <div style="padding:64px 24px;text-align:center;">
-          <p class="t-body t-muted" style="margin:0;">No attendance records yet.</p>
-        </div>
-        @endforelse
       </div>
     </div>
   </section>
-
-  {{-- ── Footer ───────────────────────────────────────────────── --}}
-  <footer style="background:var(--parchment);border-top:1px solid var(--line);padding:32px 22px;">
-    <div style="max-width:980px;margin:0 auto;text-align:center;">
-      <p class="t-fine t-muted" style="margin:0;">© {{ date('Y') }} Employee Attendance System</p>
-    </div>
-  </footer>
-
-</div>
-
-{{-- ── QR Scanner Modal ─────────────────────────────────────── --}}
-<div id="qr-modal" class="hidden">
-  <div class="modal-backdrop" onclick="closeQRScanner()"></div>
-  <div class="modal">
-    <div style="padding:24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-        <p class="t-tagline t-ink" style="margin:0;">Scan QR Code</p>
-        <button onclick="closeQRScanner()"
-                style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-
-      <div style="position:relative;aspect-ratio:1;background:var(--charcoal-black);border-radius:0;overflow:hidden;margin-bottom:16px;">
-        <video id="qr-video" style="width:100%;height:100%;object-fit:cover;" autoplay playsinline></video>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-          <div style="width:200px;height:200px;border:2px solid rgba(247,246,242,0.75);border-radius:0;"></div>
-        </div>
-      </div>
-
-      <div id="location-status" style="text-align:center;margin-bottom:16px;">
-        <span class="t-caption t-muted">Waiting for location…</span>
-      </div>
-
-      <div style="background:var(--parchment);border-radius:0;padding:16px;">
-        <p class="t-caption t-ink" style="margin:0 0 8px;font-weight:600;">Instructions</p>
-        <ol style="margin:0;padding-left:18px;" class="t-caption t-muted">
-          <li style="margin-bottom:4px;">Point your camera at the QR code</li>
-          <li style="margin-bottom:4px;">If you are out, this checks you in; if you are in, this checks you out</li>
-          <li style="margin-bottom:4px;">You must be within {{ (int) $geofenceRadius }}m of the workplace</li>
-          <li>Allow location access when prompted</li>
-        </ol>
-      </div>
-    </div>
-  </div>
 </div>
 
 @push('scripts')
 <script>
-// Today's attendance status
 document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const r = await fetch('/attendance/today', { headers: { Accept: 'application/json' } });
-    if (!r.ok) return;
-    const d = await r.json();
-    const el = document.getElementById('today-status');
-    if (!el) return;
-
-    if (d.has_open_session) {
-      const open = d.data?.open_session;
-      el.innerHTML = `
-        <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Checked in ✓</p>
-        <p class="t-body" style="color:var(--faint);margin:0;">Current session started at ${open?.check_in_time || open?.time || ''}. Scan again to check out.</p>
-      `;
-    } else if (d.has_attended) {
-      const latest = d.data?.latest;
-      el.innerHTML = `
-        <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Checked out ✓</p>
-        <p class="t-body" style="color:var(--faint);margin:0;">Last session ended at ${latest?.check_out_time || latest?.time || ''}. Scan again to start a new session.</p>
-      `;
-    } else {
-      el.innerHTML = `
-        <p class="t-display" style="color:var(--on-dark);margin:0 0 8px;">Not yet recorded</p>
-        <p class="t-body" style="color:var(--faint);margin:0;">Scan the QR code above to check in.</p>
-      `;
-    }
-  } catch(e) { /* silent */ }
+ const el=document.getElementById('today-status');
+ try {
+  const r=await fetch('/attendance/today',{headers:{Accept:'application/json'}});
+  const d=await r.json();
+  if(d.has_open_session){el.innerHTML='<p class="t-body" style="font-weight:600">🟢 Working</p><p class="t-caption">Your current session is active. Scan QR to checkout.</p>';}
+  else if(d.has_attended){el.innerHTML='<p class="t-body" style="font-weight:600">Session completed</p><p class="t-caption">Scan QR to start another session.</p>';}
+  else {el.innerHTML='<p class="t-body" style="font-weight:600">Ready to check in</p><p class="t-caption">Scan the workplace QR code.</p>';}
+ } catch(e) {}
 });
-
-let qrWatcher = null;
-
-async function openQRScanner() {
-  const modal  = document.getElementById('qr-modal');
-  const video  = document.getElementById('qr-video');
-  const status = document.getElementById('location-status');
-  const setStatus = (msg, color) => {
-      const span = document.createElement('span');
-      span.className = 't-caption' + (color ? '' : ' t-muted');
-      if (color) span.style.color = color;
-      span.textContent = msg;
-      status.replaceChildren(span);
-  };
-  modal.classList.remove('hidden');
-
-  try {
-    setStatus('Getting location…');
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
-    );
-    const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-    setStatus(`Location acquired (±${Math.round(pos.coords.accuracy)}m). Point the camera at the QR code.`, 'var(--ok)');
-
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    video.srcObject = stream;
-    await video.play();
-
-    qrWatcher = window.AttendanceScanner.watchForQr(video);
-    const payload = await qrWatcher.promise;
-    qrWatcher = null;
-
-    setStatus('Recording attendance…');
-    const result = await window.AttendanceScanner.submitAttendance(payload, coords);
-    setStatus(result.message || 'Attendance recorded.', 'var(--ok)');
-    setTimeout(() => window.location.reload(), 1500);
-  } catch(e) {
-    if (e.message !== 'cancelled') setStatus(e.message, 'var(--danger)');
-  } finally {
-    stopCamera();
-  }
-}
-
-function stopCamera() {
-  const video = document.getElementById('qr-video');
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-}
-
-function closeQRScanner() {
-  document.getElementById('qr-modal').classList.add('hidden');
-  if (qrWatcher) { qrWatcher.cancel(); qrWatcher = null; }
-  stopCamera();
-}
 </script>
 @endpush
 @endsection
