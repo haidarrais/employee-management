@@ -14,6 +14,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const ROLE_SUPERADMIN = 'superadmin';
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MANAGEMENT = 'management';
     public const ROLE_QR_GENERATOR = 'qr_generator';
@@ -63,6 +64,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * Check if user has superadmin role.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
+    }
+
+    /**
      * Check if user has admin role.
      */
     public function isAdmin(): bool
@@ -91,7 +100,7 @@ class User extends Authenticatable
      */
     public function canGenerateQrCodes(): bool
     {
-        return $this->isAdmin() || $this->isManagement() || $this->isQrGenerator();
+        return $this->isSuperAdmin() || $this->isAdmin() || $this->isManagement() || $this->isQrGenerator();
     }
 
     /**
