@@ -51,9 +51,9 @@ Route::prefix('v1/auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('v1/qr')->middleware(['auth:sanctum', 'ability:full_access'])->group(function () {
-    // Generate QR code - admin/management only
+    // Generate QR code - admin/management/QR-generator only
     Route::post('/generate', [QRCodeController::class, 'generate'])
-        ->middleware('role:admin,management')
+        ->middleware('role:admin,management,qr_generator')
         ->name('api.qr.generate');
     
     // Validate QR code - all authenticated users
