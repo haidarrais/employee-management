@@ -22,7 +22,7 @@
 
       {{-- Avatar + name --}}
       <div style="text-align:center;margin-bottom:32px;">
-        <div style="width:64px;height:64px;border-radius:50%;background:#dbeafe;
+        <div style="width:64px;height:64px;background:rgba(107,155,212,.14);
                     display:flex;align-items:center;justify-content:center;
                     font-size:24px;font-weight:600;color:var(--blue);margin:0 auto 12px;">
           {{ strtoupper(substr($user->name, 0, 1)) }}

@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Sign In — Attendance</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body style="margin:0;background:#000;min-height:100vh;display:flex;flex-direction:column;">
+<body style="margin:0;min-height:100vh;display:flex;flex-direction:column;">
 
   {{-- ── Minimal black nav ──────────────────────────────────── --}}
-  <nav style="height:44px;background:#000;display:flex;align-items:center;padding:0 22px;flex-shrink:0;">
-    <span style="font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.374px;">Attendance</span>
+  <nav class="global-nav" style="position:static;flex-shrink:0;">
+    <div class="global-nav__inner">
+      <span class="global-nav__brand">
+        <img src="/brand/abdillah-works-mark.svg" alt="Abdillah Works" width="104" height="41">
+      </span>
+    </div>
   </nav>
 
   {{-- ── Parchment content area ─────────────────────────────── --}}

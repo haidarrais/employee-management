@@ -41,8 +41,11 @@
         </div>
         <div class="card-body" style="text-align:center;">
 
-          <div style="display:inline-block;background:#fff;border:1px solid var(--line);
-                      border-radius:12px;padding:12px;margin-bottom:20px;">
+          {{-- The QR panel is deliberately a light island: scanners need a
+               light quiet zone around the code, so it stays Warm White even
+               though the rest of the surface is dark. --}}
+          <div style="display:inline-block;background:var(--warm-white);border:1px solid var(--hairline);
+                      border-radius:0;padding:12px;margin-bottom:20px;">
             <img src="{{ $qrDataUri }}" alt="Two-factor authentication QR code"
                  width="260" height="260" style="display:block;">
           </div>

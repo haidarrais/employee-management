@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Confirm Password — Attendance</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body style="margin:0;background:#000;min-height:100vh;display:flex;flex-direction:column;">
+<body style="margin:0;min-height:100vh;display:flex;flex-direction:column;">
 
-  <nav style="height:44px;background:#000;display:flex;align-items:center;padding:0 22px;flex-shrink:0;">
-    <span style="font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.374px;">Attendance</span>
+  <nav class="global-nav" style="position:static;flex-shrink:0;">
+    <div class="global-nav__inner">
+      <span class="global-nav__brand">
+        <img src="/brand/abdillah-works-mark.svg" alt="Abdillah Works" width="104" height="41">
+      </span>
+    </div>
   </nav>
 
   <div style="flex:1;background:var(--parchment);display:flex;align-items:center;justify-content:center;padding:48px 16px;">
@@ -21,9 +23,9 @@
 
       {{-- Icon + headline --}}
       <div style="text-align:center;margin-bottom:32px;">
-        <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;
+        <div style="width:56px;height:56px;border:1px solid var(--danger);
                     display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-          <svg width="24" height="24" fill="none" stroke="#ff3b30" stroke-width="2" viewBox="0 0 24 24">
+          <svg width="24" height="24" fill="none" stroke="var(--danger)" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
           </svg>

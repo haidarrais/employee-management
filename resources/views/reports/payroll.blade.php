@@ -45,7 +45,7 @@
   {{-- ── Schedule info bar ───────────────────────────────────── --}}
   <section style="background:var(--canvas);padding:16px 22px 28px;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="background:var(--parchment);border:1px solid var(--line);border-radius:12px;padding:14px 20px;">
+      <div style="background:var(--parchment);border:1px solid var(--line);border-radius:0;padding:14px 20px;">
         <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;">
 
           @foreach(['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as $dayName)
@@ -231,8 +231,8 @@
                 $gracePct = (($graceEndMin - $winStart) / $winLen) * 100;
                 $endPct   = (($offEndMin   - $winStart) / $winLen) * 100;
 
-                $ciColor = $checkInMin <= $offStartMin ? '#34c759'
-                         : ($checkInMin <= $graceEndMin ? '#ff9f0a' : '#ff3b30');
+                $ciColor = $checkInMin <= $offStartMin ? 'var(--ok)'
+                         : ($checkInMin <= $graceEndMin ? 'var(--warn)' : 'var(--danger)');
               @endphp
               <tr>
                 <td style="white-space:nowrap;">
@@ -292,14 +292,14 @@
                       $eP   = min(100,(($eMin-$winStart)/$winLen)*100);
                     @endphp
                     <div style="position:absolute;left:{{ $sP }}%;width:{{ $eP-$sP }}%;
-                                top:0;bottom:0;background:rgba(0,102,204,0.08);border-radius:2px;"></div>
+                                top:0;bottom:0;background:rgba(255,106,0,0.10);border-radius:2px;"></div>
                     @endforeach
 
                     {{-- Official start line --}}
                     <div style="position:absolute;left:{{ $startPct }}%;top:0;bottom:0;width:1px;background:var(--line);"></div>
 
                     {{-- Grace end line --}}
-                    <div style="position:absolute;left:{{ $gracePct }}%;top:0;bottom:0;width:1px;background:#ff9f0a;opacity:0.6;"></div>
+                    <div style="position:absolute;left:{{ $gracePct }}%;top:0;bottom:0;width:1px;background:var(--warn);opacity:0.6;"></div>
 
                     {{-- Official end line --}}
                     <div style="position:absolute;left:{{ $endPct }}%;top:0;bottom:0;width:1px;background:var(--line);"></div>
@@ -307,14 +307,14 @@
                     {{-- Check-in dot --}}
                     <div style="position:absolute;left:calc({{ $ciPct }}% - 5px);top:50%;transform:translateY(-50%);
                                 width:10px;height:10px;border-radius:50%;background:{{ $ciColor }};
-                                box-shadow:0 0 0 2px #fff,0 0 0 3px {{ $ciColor }};"
+                                box-shadow:0 0 0 2px var(--surface),0 0 0 3px {{ $ciColor }};"
                          title="Check-in {{ $rec->check_in_at->format('H:i') }}"></div>
 
                     {{-- Check-out dot --}}
                     @if($coPct !== null)
                     <div style="position:absolute;left:calc({{ $coPct }}% - 5px);top:50%;transform:translateY(-50%);
                                 width:10px;height:10px;border-radius:50%;background:var(--muted);
-                                box-shadow:0 0 0 2px #fff,0 0 0 3px var(--muted);"
+                                box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--muted);"
                          title="Check-out {{ $rec->check_out_at->format('H:i') }}"></div>
                     @endif
                   </div>

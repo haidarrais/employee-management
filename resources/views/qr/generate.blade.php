@@ -46,18 +46,18 @@
         <img id="qr-image"
              src="{{ $qrCodeImage }}"
              alt="Attendance QR Code"
-             style="width:280px;height:280px;display:block;border-radius:12px;
+             style="width:280px;height:280px;display:block;border-radius:0;
                     box-shadow:var(--shadow-product);">
 
         {{-- Expired overlay --}}
         <div id="expired-overlay"
              class="hidden"
-             style="position:absolute;inset:0;border-radius:12px;
-                    background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);
+             style="position:absolute;inset:0;border-radius:0;
+                    background:rgba(11,11,12,0.94);backdrop-filter:blur(8px);
                     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
-          <div style="width:48px;height:48px;border-radius:50%;background:#fee2e2;
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--danger-bg);
                       display:flex;align-items:center;justify-content:center;">
-            <svg width="22" height="22" fill="none" stroke="#ff3b30" stroke-width="2" viewBox="0 0 24 24">
+            <svg width="22" height="22" fill="none" stroke="var(--danger)" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
@@ -107,7 +107,7 @@
           'Each code is single-use — generate a new one for the next session.',
         ] as $i => $step)
         <li style="display:flex;align-items:flex-start;gap:14px;">
-          <span style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);
+          <span style="width:24px;height:24px;border-radius:50%;background:rgba(247,246,242,0.10);
                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
                        font-size:12px;font-weight:600;color:var(--faint);">{{ $i + 1 }}</span>
           <p class="t-body" style="color:var(--faint);margin:0;">{{ $step }}</p>
@@ -154,12 +154,12 @@
     progressEl.style.width  = `${pct}%`;
 
     if (pct > 50)      progressEl.style.background = 'var(--blue)';
-    else if (pct > 20) progressEl.style.background = '#ff9f0a';
-    else               progressEl.style.background = '#ff3b30';
+    else if (pct > 20) progressEl.style.background = 'var(--warn)';
+    else               progressEl.style.background = 'var(--danger)';
 
     if (pct > 50)      countdownEl.style.color = 'var(--ink)';
-    else if (pct > 20) countdownEl.style.color = '#ff9f0a';
-    else               countdownEl.style.color = '#ff3b30';
+    else if (pct > 20) countdownEl.style.color = 'var(--warn)';
+    else               countdownEl.style.color = 'var(--danger)';
   }
 
   function expire() {

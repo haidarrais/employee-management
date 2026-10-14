@@ -31,12 +31,12 @@
 
         <div class="card" style="text-align:center;padding:28px 24px;">
           <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Present</p>
-          <p style="font-size:40px;font-weight:600;color:#065f46;margin:0;line-height:1;">{{ $stats['present'] ?? 0 }}</p>
+          <p style="font-size:40px;font-weight:600;color:var(--ok);margin:0;line-height:1;">{{ $stats['present'] ?? 0 }}</p>
         </div>
 
         <div class="card" style="text-align:center;padding:28px 24px;">
           <p class="t-fine t-muted" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Absent</p>
-          <p style="font-size:40px;font-weight:600;color:#991b1b;margin:0;line-height:1;">{{ $stats['absent'] ?? 0 }}</p>
+          <p style="font-size:40px;font-weight:600;color:var(--danger);margin:0;line-height:1;">{{ $stats['absent'] ?? 0 }}</p>
         </div>
 
         <div class="card" style="text-align:center;padding:28px 24px;">
@@ -61,10 +61,10 @@
         <div style="display:flex;align-items:center;justify-content:space-between;
                     padding:16px 24px;border-bottom:1px solid var(--soft);">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;
+            <div style="width:36px;height:36px;flex-shrink:0;
                         display:flex;align-items:center;justify-content:center;
-                        background:{{ $record->status === 'confirmed' ? '#d1fae5' : ($record->status === 'rejected' ? '#fee2e2' : 'var(--soft)') }};
-                        color:{{ $record->status === 'confirmed' ? '#065f46' : ($record->status === 'rejected' ? '#991b1b' : 'var(--muted)') }};">
+                        background:{{ $record->status === 'confirmed' ? 'var(--ok-bg)' : ($record->status === 'rejected' ? 'var(--danger-bg)' : 'var(--soft)') }};
+                        color:{{ $record->status === 'confirmed' ? 'var(--ok)' : ($record->status === 'rejected' ? 'var(--danger)' : 'var(--muted)') }};">
               @if($record->status === 'confirmed')
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>

@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0b0b0c">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   @auth
   <meta name="api-token" content="{{ session('api_token', '') }}">
@@ -16,37 +16,41 @@
 
   <title>@yield('title', 'Attendance')</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  {{-- Favicon is the Abdillah Works mark, matching abdillah.group. --}}
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
+  {{-- Fonts are self-hosted and declared in app.css (@font-face), so the
+       page makes no third-party request and cannot be blocked by the
+       font CDN being slow or unavailable. --}}
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body style="margin:0; background:#f5f5f7;">
+<body>
 
   {{-- ── Global Nav ─────────────────────────────────────────── --}}
   @auth
   <nav class="global-nav" role="navigation" aria-label="Global">
     <div class="global-nav__inner">
-      <a href="{{ route('dashboard') }}" class="global-nav__brand">Attendance</a>
+      <a href="{{ route('dashboard') }}" class="global-nav__brand" aria-label="Abdillah Works, dashboard">
+        <img src="/brand/abdillah-works-mark.svg" alt="Abdillah Works" width="104" height="41">
+      </a>
 
       <div class="global-nav__actions">
         {{-- Connection dot --}}
         <span id="conn-dot" title="Connected"
-              style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#34c759;"></span>
+              style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);"></span>
 
         {{-- User dropdown --}}
         <div class="dropdown" style="margin-left:12px;">
           <button class="btn-dark btn-sm" style="gap:8px;" aria-haspopup="true">
             <span style="display:inline-flex;align-items:center;justify-content:center;
-                         width:22px;height:22px;border-radius:50%;
-                         background:rgba(255,255,255,0.15);
-                         font-size:12px;font-weight:600;color:#fff;">
+                         width:22px;height:22px;
+                         background:rgba(11,11,12,0.14);
+                         font-family:var(--font-display);font-size:11px;font-weight:600;color:inherit;">
               {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
             </span>
             <span class="hide-mobile">{{ Auth::user()->name }}</span>
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style="opacity:.6;">
-              <path d="M1 1l4 4 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </button>
           <div class="dropdown-menu">
@@ -60,7 +64,7 @@
             <a href="{{ route('admin.users') }}" class="dropdown-item">Manage Users</a>
             <a href="{{ route('audit.logs') }}" class="dropdown-item">Audit Logs</a>
             @endif
-            <div style="height:1px;background:var(--soft);margin:4px 0;"></div>
+            <div style="height:1px;background:var(--hairline);margin:0;"></div>
             <form method="POST" action="{{ route('logout') }}">
               @csrf
               <button type="submit" class="dropdown-item dropdown-item-danger">Sign Out</button>
@@ -83,9 +87,9 @@
   <div id="session-modal" class="hidden">
     <div class="modal-backdrop" onclick="document.getElementById('session-modal').classList.add('hidden')"></div>
     <div class="modal" style="padding:32px;text-align:center;">
-      <div style="width:56px;height:56px;border-radius:50%;background:#fef3c7;
+      <div style="width:56px;height:56px;border:1px solid var(--warn);
                   display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-        <svg width="24" height="24" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24">
+        <svg width="24" height="24" fill="none" stroke="var(--warn)" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </div>
@@ -111,7 +115,7 @@
     const dot = document.getElementById('conn-dot');
     if (!dot) return;
     function update(){
-      dot.style.background = navigator.onLine ? '#34c759' : '#ff3b30';
+      dot.style.background = navigator.onLine ? 'var(--ok)' : 'var(--danger)';
       dot.title = navigator.onLine ? 'Connected' : 'Offline';
     }
     window.addEventListener('online', update);

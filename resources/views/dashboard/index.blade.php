@@ -91,10 +91,10 @@
         <div style="display:flex;align-items:center;justify-content:space-between;
                     padding:16px 24px;border-bottom:1px solid var(--soft);">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;
+            <div style="width:36px;height:36px;flex-shrink:0;
                         display:flex;align-items:center;justify-content:center;
-                        background:{{ $record->status === 'confirmed' ? '#d1fae5' : ($record->status === 'rejected' ? '#fee2e2' : 'var(--soft)') }};
-                        color:{{ $record->status === 'confirmed' ? '#065f46' : ($record->status === 'rejected' ? '#991b1b' : 'var(--muted)') }};">
+                        background:{{ $record->status === 'confirmed' ? 'var(--ok-bg)' : ($record->status === 'rejected' ? 'var(--danger-bg)' : 'var(--soft)') }};
+                        color:{{ $record->status === 'confirmed' ? 'var(--ok)' : ($record->status === 'rejected' ? 'var(--danger)' : 'var(--muted)') }};">
               @if($record->status === 'confirmed')
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -147,10 +147,10 @@
         </button>
       </div>
 
-      <div style="position:relative;aspect-ratio:1;background:#000;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="position:relative;aspect-ratio:1;background:var(--charcoal-black);border-radius:0;overflow:hidden;margin-bottom:16px;">
         <video id="qr-video" style="width:100%;height:100%;object-fit:cover;" autoplay playsinline></video>
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-          <div style="width:200px;height:200px;border:2px solid rgba(255,255,255,0.8);border-radius:12px;"></div>
+          <div style="width:200px;height:200px;border:2px solid rgba(247,246,242,0.75);border-radius:0;"></div>
         </div>
       </div>
 
@@ -158,7 +158,7 @@
         <span class="t-caption t-muted">Waiting for location…</span>
       </div>
 
-      <div style="background:var(--parchment);border-radius:12px;padding:16px;">
+      <div style="background:var(--parchment);border-radius:0;padding:16px;">
         <p class="t-caption t-ink" style="margin:0 0 8px;font-weight:600;">Instructions</p>
         <ol style="margin:0;padding-left:18px;" class="t-caption t-muted">
           <li style="margin-bottom:4px;">Point your camera at the QR code</li>
@@ -216,7 +216,7 @@ async function openQRScanner() {
       navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
     );
     const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-    setStatus(`Location acquired (±${Math.round(pos.coords.accuracy)}m). Point the camera at the QR code.`, '#34c759');
+    setStatus(`Location acquired (±${Math.round(pos.coords.accuracy)}m). Point the camera at the QR code.`, 'var(--ok)');
 
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     video.srcObject = stream;
@@ -228,10 +228,10 @@ async function openQRScanner() {
 
     setStatus('Recording attendance…');
     const result = await window.AttendanceScanner.submitAttendance(payload, coords);
-    setStatus(result.message || 'Attendance recorded.', '#34c759');
+    setStatus(result.message || 'Attendance recorded.', 'var(--ok)');
     setTimeout(() => window.location.reload(), 1500);
   } catch(e) {
-    if (e.message !== 'cancelled') setStatus(e.message, '#ff3b30');
+    if (e.message !== 'cancelled') setStatus(e.message, 'var(--danger)');
   } finally {
     stopCamera();
   }
