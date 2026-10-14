@@ -2,6 +2,13 @@
 
 namespace App\Services;
 
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode as EndroidQrCode;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
+
 /**
  * MFA Service for TOTP-based two-factor authentication.
  * Uses Google Authenticator compatible TOTP algorithm.
@@ -130,21 +137,27 @@ class MFAService
     }
 
     /**
-     * Generate QR code as SVG data URL.
+     * Render the provisioning URI as a scannable QR code.
      *
      * @param string $secret Base32-encoded secret
      * @param string $email User's email address
      * @param string|null $issuer Application name
-     * @return string SVG data URL
+     * @return string Base64-encoded PNG data URI
      */
-    public function generateQRCodeSvg(string $secret, string $email, ?string $issuer = null): string
+    public function generateQRCodeDataUri(string $secret, string $email, ?string $issuer = null): string
     {
-        // This is a simple implementation - in production you might use a library
-        // For now, we'll return the provisioning URI encoded
-        $uri = $this->getProvisioningUri($secret, $email, $issuer ?? 'Attendance System');
-        
-        // Return the URI as a data URL (client can convert to QR)
-        return 'data:otpauth/' . rawurlencode($uri);
+        $qrCode = new EndroidQrCode(
+            data:                 $this->getProvisioningUri($secret, $email, $issuer ?? 'Attendance System'),
+            encoding:             new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            size:                 260,
+            margin:               8,
+            roundBlockSizeMode:   RoundBlockSizeMode::Margin,
+            foregroundColor:      new Color(0, 0, 0),
+            backgroundColor:      new Color(255, 255, 255),
+        );
+
+        return (new PngWriter())->write($qrCode)->getDataUri();
     }
 
     /**

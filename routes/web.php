@@ -53,6 +53,10 @@ Route::middleware(['auth', 'web'])->group(function () {
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
         Route::put('/profile/mfa', [ProfileController::class, 'updateMfa'])->name('profile.mfa');
+
+        // MFA enrolment — enabling only happens after a code is verified
+        Route::get('/profile/mfa/setup', [ProfileController::class, 'showMfaSetup'])->name('mfa.setup');
+        Route::post('/profile/mfa/setup', [ProfileController::class, 'confirmMfaSetup'])->name('mfa.setup.confirm');
     });
 
     // Attendance history — open (employees check their own records)

@@ -62,6 +62,21 @@ class AdminController extends Controller
 
         $user->update($data);
 
+        // An admin clearing MFA must wipe the enrolled secret too, otherwise
+        // the account would still demand a code it can no longer produce.
+        if ($request->boolean('reset_mfa') && ($user->mfa_enabled || $user->mfa_secret)) {
+            $user->update([
+                'mfa_enabled' => false,
+                'mfa_secret'  => null,
+            ]);
+
+            app(\App\Services\AuditService::class)->log(
+                'mfa_reset_by_admin',
+                auth()->id(),
+                ['target_user_id' => $user->id]
+            );
+        }
+
         if ($user->wasChanged('role')) {
             app(\App\Services\AuditService::class)->log(
                 'role_changed',

@@ -92,6 +92,21 @@
               @error('password')<p class="form-error">{{ $message }}</p>@enderror
             </div>
 
+            @if($user->mfa_enabled || $user->mfa_secret)
+            <div style="background:var(--parchment);border:1px solid var(--line);border-radius:10px;padding:12px 14px;">
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
+                <input type="checkbox" name="reset_mfa" value="1" class="checkbox" style="margin-top:3px;">
+                <span>
+                  <span class="t-body t-ink" style="display:block;font-weight:600;">Reset two-factor authentication</span>
+                  <span class="t-caption t-muted" style="display:block;">
+                    Clears the enrolled authenticator so this user can sign in without a code
+                    and re-enrol. Use this if they lose their device.
+                  </span>
+                </span>
+              </label>
+            </div>
+            @endif
+
           </div>
         </div>
 
