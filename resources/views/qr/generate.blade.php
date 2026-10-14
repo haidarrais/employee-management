@@ -57,6 +57,26 @@
  const countdown=document.getElementById('countdown');
  const progress=document.getElementById('progress-bar');
  const badge=document.getElementById('status-badge');
+ const statusUrl='{{ route('qr.status', $qrCode) }}';
+ let regenerating=false;
+
+ async function watchUsage(){
+  if(regenerating) return;
+  try{
+   const response=await fetch(statusUrl,{headers:{Accept:'application/json'},cache:'no-store'});
+   if(!response.ok) return;
+   const data=await response.json();
+   if(data.status==='used'){
+    regenerating=true;
+    badge.className='badge badge-blue';
+    badge.innerHTML='<span class="dot dot-blue"></span> Used · generating next code…';
+    window.location.replace('{{ route('qr.generate') }}');
+   }
+  }catch(error){
+   // Keep the station usable if one polling request fails.
+  }
+ }
+
  function tick(){
   const rem=expiresAt-Date.now();
   if(rem<=0){
@@ -71,7 +91,7 @@
   progress.style.width=((rem/total)*100)+'%';
  }
  window.refreshQr=function(){window.location.href='{{ route('qr.generate') }}';};
- tick();setInterval(tick,1000);
+ tick();setInterval(tick,1000);watchUsage();setInterval(watchUsage,1000);
 })();
 </script>
 @endpush
