@@ -78,10 +78,12 @@
             <div>
               <label class="form-label">Role</label>
               <select name="role" class="form-input" required>
-                <option value="employee"   {{ old('role', $user->role) === 'employee'   ? 'selected' : '' }}>Employee</option>
-                <option value="management" {{ old('role', $user->role) === 'management' ? 'selected' : '' }}>Management</option>
-                <option value="admin"      {{ old('role', $user->role) === 'admin'      ? 'selected' : '' }}>Admin</option>
+                <option value="employee"     {{ old('role', $user->role) === 'employee'     ? 'selected' : '' }}>Employee</option>
+                <option value="qr_generator" {{ old('role', $user->role) === 'qr_generator' ? 'selected' : '' }}>QR Generation Only</option>
+                <option value="management"   {{ old('role', $user->role) === 'management'   ? 'selected' : '' }}>Management</option>
+                <option value="admin"        {{ old('role', $user->role) === 'admin'        ? 'selected' : '' }}>Admin</option>
               </select>
+              <p class="form-hint">QR Generation Only can generate attendance QR codes but cannot access payroll or reports.</p>
               @error('role')<p class="form-error">{{ $message }}</p>@enderror
             </div>
 

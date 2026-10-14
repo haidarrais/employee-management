@@ -16,6 +16,7 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MANAGEMENT = 'management';
+    public const ROLE_QR_GENERATOR = 'qr_generator';
     public const ROLE_EMPLOYEE = 'employee';
 
     /**
@@ -75,6 +76,22 @@ class User extends Authenticatable
     public function isManagement(): bool
     {
         return $this->role === self::ROLE_MANAGEMENT;
+    }
+
+    /**
+     * Check if user has QR generator role.
+     */
+    public function isQrGenerator(): bool
+    {
+        return $this->role === self::ROLE_QR_GENERATOR;
+    }
+
+    /**
+     * Check if user can generate QR codes without implying payroll access.
+     */
+    public function canGenerateQrCodes(): bool
+    {
+        return $this->isAdmin() || $this->isManagement() || $this->isQrGenerator();
     }
 
     /**

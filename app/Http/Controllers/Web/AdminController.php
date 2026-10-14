@@ -42,7 +42,12 @@ class AdminController extends Controller
         $request->validate([
             'name'          => 'required|string|max:255',
             'email'         => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'role'          => 'required|in:admin,management,employee',
+            'role'          => ['required', Rule::in([
+                User::ROLE_ADMIN,
+                User::ROLE_MANAGEMENT,
+                User::ROLE_QR_GENERATOR,
+                User::ROLE_EMPLOYEE,
+            ])],
             'password'      => 'nullable|string|min:8',
             'daily_rate'    => 'nullable|numeric|min:0',
             'overtime_rate' => 'nullable|numeric|min:0',
