@@ -52,36 +52,59 @@ class ReportController extends Controller
 
         $records = $query->orderBy('check_in_at')->get();
 
-        // ── Recalculate fee live for every record ─────────────────
-        // This ensures the report always reflects the current employee
-        // rate, even if the rate was changed after the record was saved.
-        foreach ($records as $record) {
-            $workedMinutes = $record->check_out_at
-                ? (int) $record->check_in_at->diffInMinutes($record->check_out_at)
-                : 0;
+        // ── Recalculate fee live per employee-day ─────────────────
+        // A day can now contain multiple sessions (for example lunch break),
+        // so base pay and late deduction must be counted once per day, not once
+        // per check-in/check-out pair. Each record still stays visible as a
+        // session inside the day.
+        $days = $records
+            ->groupBy(fn ($record) => $record->user_id . '|' . $record->check_in_at->toDateString())
+            ->map(function ($dayRecords) {
+                $first = $dayRecords->sortBy('check_in_at')->first();
+                $lastClosed = $dayRecords->filter(fn ($record) => $record->check_out_at !== null)
+                    ->sortByDesc('check_out_at')
+                    ->first();
 
-            $record->computed_fee = $this->whs->dailyFee(
-                $record->check_in_at,
-                $record->late_minutes,
-                $record->overtime_minutes,
-                $record->user,
-                $workedMinutes,
-            );
-        }
+                $checkIn = $first->check_in_at;
+                $checkOut = $lastClosed?->check_out_at;
+                $workedMinutes = $dayRecords->sum(fn ($record) => $record->workedMinutes());
+                $lateMinutes = $this->whs->lateMinutes($checkIn);
+                $overtimeMinutes = $this->whs->overtimeMinutes($checkOut, $checkIn);
+                $fee = $this->whs->dailyFee($checkIn, $lateMinutes, $overtimeMinutes, $first->user, $workedMinutes);
+
+                foreach ($dayRecords as $record) {
+                    $record->computed_fee = 0;
+                }
+
+                $first->computed_fee = $fee;
+
+                return [
+                    'user' => $first->user,
+                    'date' => $checkIn->toDateString(),
+                    'check_in_at' => $checkIn,
+                    'check_out_at' => $checkOut,
+                    'late_minutes' => $lateMinutes,
+                    'overtime_minutes' => $overtimeMinutes,
+                    'worked_minutes' => $workedMinutes,
+                    'computed_fee' => $fee,
+                    'records' => $dayRecords->sortBy('check_in_at')->values(),
+                ];
+            });
 
         // ── Per-employee summary ──────────────────────────────────
-        $summary = $records
-            ->groupBy('user_id')
-            ->map(function ($recs) {
-                $user = $recs->first()->user;
+        $summary = $days
+            ->groupBy(fn ($day) => $day['user']->id)
+            ->map(function ($employeeDays) {
+                $user = $employeeDays->first()['user'];
+
                 return [
                     'user'               => $user,
-                    'days_attended'      => $recs->count(),
-                    'total_late_min'     => $recs->sum('late_minutes'),
-                    'total_overtime_min' => $recs->sum('overtime_minutes'),
-                    // Sum the live-computed fee, not the stored column
-                    'total_fee'          => $recs->sum('computed_fee'),
-                    'records'            => $recs,
+                    'days_attended'      => $employeeDays->count(),
+                    'total_late_min'     => $employeeDays->sum('late_minutes'),
+                    'total_overtime_min' => $employeeDays->sum('overtime_minutes'),
+                    'total_fee'          => $employeeDays->sum('computed_fee'),
+                    'records'            => $employeeDays->flatMap(fn ($day) => $day['records'])->values(),
+                    'days'               => $employeeDays->values(),
                 ];
             })
             ->sortBy('user.name')
