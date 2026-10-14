@@ -26,9 +26,10 @@
                placeholder="Search by name or email…">
         <select name="role" class="form-input" style="width:auto;">
           <option value="">All roles</option>
-          <option value="admin"      {{ request('role') === 'admin'      ? 'selected' : '' }}>Admin</option>
-          <option value="management" {{ request('role') === 'management' ? 'selected' : '' }}>Management</option>
-          <option value="employee"   {{ request('role') === 'employee'   ? 'selected' : '' }}>Employee</option>
+          <option value="admin"        {{ request('role') === 'admin'        ? 'selected' : '' }}>Admin</option>
+          <option value="management"   {{ request('role') === 'management'   ? 'selected' : '' }}>Management</option>
+          <option value="qr_generator" {{ request('role') === 'qr_generator' ? 'selected' : '' }}>QR Generation Only</option>
+          <option value="employee"     {{ request('role') === 'employee'     ? 'selected' : '' }}>Employee</option>
         </select>
         <button type="submit" class="btn-primary btn-sm">Filter</button>
         @if(request()->hasAny(['search','role']))
@@ -71,8 +72,8 @@
                   </div>
                 </td>
                 <td>
-                  <span class="badge {{ $user->role === 'admin' ? 'badge-error' : ($user->role === 'management' ? 'badge-warning' : 'badge-gray') }}">
-                    {{ ucfirst($user->role) }}
+                  <span class="badge {{ $user->role === 'admin' ? 'badge-error' : ($user->role === 'management' ? 'badge-warning' : ($user->role === 'qr_generator' ? 'badge-blue' : 'badge-gray')) }}">
+                    {{ $user->role === 'qr_generator' ? 'QR Generation Only' : ucfirst($user->role) }}
                   </span>
                 </td>
                 <td>
