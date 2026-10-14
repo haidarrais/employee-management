@@ -42,10 +42,10 @@ Route::middleware(['auth', 'web'])->group(function () {
     // (employees use this to scan QR on the shared office computer)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // QR Code generation — open to admin/management WITHOUT password confirmation
-    // (the whole point: employees can hand the computer to admin to generate QR)
+    // QR Code generation — open to admin/management/QR-generator WITHOUT password confirmation
+    // QR-generator users may only generate QR codes and do not get payroll/report access.
     Route::get('/qr/generate', [QrCodeController::class, 'generate'])
-        ->middleware('role:admin,management')
+        ->middleware('role:admin,management,qr_generator')
         ->name('qr.generate');
 
     // Profile — requires password confirmation (personal sensitive data)
