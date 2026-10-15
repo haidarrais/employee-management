@@ -16,8 +16,10 @@
 
   <title>@yield('title', 'Attendance')</title>
 
-  {{-- Favicon is the Abdillah Works mark, matching abdillah.group. --}}
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  {{-- Abdillah Works production brand assets. --}}
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
   {{-- Fonts are self-hosted and declared in app.css (@font-face), so the
        page makes no third-party request and cannot be blocked by the
@@ -31,7 +33,13 @@
   <nav class="global-nav" role="navigation" aria-label="Global">
     <div class="global-nav__inner">
       <a href="{{ route('dashboard') }}" class="global-nav__brand" aria-label="Abdillah Works, dashboard">
-        <img src="/brand/abdillah-works-mark.svg" alt="Abdillah Works" width="104" height="41">
+        <img
+          src="/brand/abdillah-works-aw-navbar.png"
+          srcset="/brand/abdillah-works-aw-navbar@2x.png 2x"
+          alt="Abdillah Works"
+          width="40"
+          height="40"
+        >
       </a>
 
       <div class="global-nav__actions">
